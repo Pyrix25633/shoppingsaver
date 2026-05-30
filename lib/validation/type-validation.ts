@@ -1,3 +1,4 @@
+import { Decimal } from "@prisma/client/runtime/library";
 import { BadRequest } from "../web/response";
 
 export function getObject(raw: any): { [index: string]: any; } {
@@ -39,6 +40,17 @@ export function getFloat(raw: any): number {
     if(raw == undefined || typeof raw != "number")
         throw new BadRequest();
     return raw;
+}
+
+export function getDecimal(raw: any): Decimal {
+    try {
+        const decimal = new Decimal(raw);
+        if(!decimal.isFinite())
+            throw new BadRequest();
+        return decimal;
+    } catch(e: any) {
+        throw new BadRequest();
+    }
 }
 
 export function getString(raw: any): string {

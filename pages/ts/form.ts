@@ -3,10 +3,15 @@ import { RequireNonNull, StatusCode, Success, defaultStatusCode } from './utils.
 type JsonObject = { [index: string]: any; };
 
 export interface FormAppendable {
-    appendTo(formOrSection: Form | InputSection): void;
+    appendTo(formOrSection: FormAppender): void;
 }
 
-export abstract class Form {
+export interface FormAppender {
+    appendInputElement(node: HTMLElement): void;
+    validate(): void;
+}
+
+export abstract class Form implements FormAppender {
     protected readonly url: string;
     private readonly method: string;
     private readonly form: HTMLElement;
@@ -34,7 +39,7 @@ export abstract class Form {
         this.validate();
     }
 
-    appendChild(node: HTMLElement): void {
+    appendInputElement(node: HTMLElement): void {
         this.form.appendChild(node);
     }
 
@@ -98,14 +103,16 @@ export class Button implements FormAppendable {
         this.inFooter = inFooter;
     }
 
-    appendTo(formOrSection: Form | InputSection | HTMLElement) {
-        if(this.inFooter || formOrSection instanceof HTMLElement)
-            formOrSection.appendChild(this.button);
+    appendTo(formOrSection: FormAppender | HTMLElement) {
+        if(formOrSection instanceof HTMLElement)
+            formOrSection.appendChild(this.button)
+        else if(this.inFooter)
+            formOrSection.appendInputElement(this.button);
         else {
             const div = document.createElement('div');
             div.classList.add('container');
             div.appendChild(this.button);
-            formOrSection.appendChild(div);
+            formOrSection.appendInputElement(div);
         }
     }
 
@@ -161,7 +168,7 @@ export class ActionButton extends Button {
         this.setDisabled(false);
     }
 
-    appendTo(formOrSection: Form | InputSection) {
+    appendTo(formOrSection: FormAppender) {
         const box = document.createElement('div');
         box.classList.add('box', 'input-feedback');
         const container = document.createElement('div');
@@ -172,7 +179,7 @@ export class ActionButton extends Button {
         feedback.innerText = this.feedbackText;
         box.appendChild(container);
         box.appendChild(feedback);
-        formOrSection.appendChild(box);
+        formOrSection.appendInputElement(box);
     }
 }
 
@@ -211,6 +218,7 @@ export abstract class StructuredForm extends Form {
                     method: 'GET',
                     success: (res: Response): void => {
                         this.precompile(res);
+                        resolve();
                     },
                     statusCode: defaultStatusCode
                 });
@@ -218,13 +226,13 @@ export abstract class StructuredForm extends Form {
         }
     }
 
-    appendChild(node: HTMLElement): void {
+    appendChild(node: HTMLElement): void { //! Error
         if(this.footer == undefined)
             this.footer = RequireNonNull.getElementById('footer') as HTMLDivElement;;
         if(node instanceof HTMLButtonElement)
             this.footer.appendChild(node);
         else
-            super.appendChild(node);
+            super.appendInputElement(node);
     }
 
     precompile(res: Response): void {
@@ -249,12 +257,12 @@ export class InfoSpan implements FormAppendable {
         this.valueSpan.classList.add('text');
     }
 
-    appendTo(formOrSection: Form | InputSection): void {
+    appendTo(formOrSection: FormAppender): void {
         const container = document.createElement('div');
         container.classList.add('container', 'label-input');
         container.appendChild(this.labelSpan);
         container.appendChild(this.valueSpan);
-        formOrSection.appendChild(container);
+        formOrSection.appendInputElement(container);
     }
 
     set(value: string): void {
@@ -269,7 +277,7 @@ export abstract class InputElement<T> implements FormAppendable {
         this.id = id;
     }
 
-    abstract appendTo(formOrSection: Form | InputSection): void;
+    abstract appendTo(formOrSection: FormAppender): void;
 
     set(value: T): void {
         throw new Error('Method not implemented!');
@@ -281,7 +289,7 @@ export abstract class InputElement<T> implements FormAppendable {
 }
 
 export abstract class Input<T> extends InputElement<T> {
-    private formOrSection: Form | InputSection | undefined = undefined;
+    private formOrSection: FormAppender | undefined = undefined;
     public readonly input: HTMLInputElement;
     private readonly labelText: string;
     protected readonly feedbackText: string;
@@ -318,7 +326,7 @@ export abstract class Input<T> extends InputElement<T> {
         });
     }
 
-    appendTo(formOrSection: Form | InputSection): void {
+    appendTo(formOrSection: FormAppender): void {
         this.formOrSection = formOrSection;
         const box = document.createElement('div');
         box.classList.add('box', 'input-feedback');
@@ -331,7 +339,7 @@ export abstract class Input<T> extends InputElement<T> {
         container.appendChild(this.input);
         box.appendChild(container);
         box.appendChild(this.feedback);
-        this.formOrSection.appendChild(box);
+        this.formOrSection.appendInputElement(box);
         setTimeout((): void => {
             if(this.input.value != '') this.parse();
         }, 250);
@@ -482,13 +490,71 @@ export class StringInput extends Input<string> {
     }
 }
 
+export class StringFilterInput extends InputElement<string> {
+    private formOrSection: FormAppender | undefined = undefined;
+    public readonly input: HTMLInputElement;
+    private readonly labelText: string;
+    private timeout: NodeJS.Timeout | undefined = undefined;
+
+    constructor(id: string, labelText: string) {
+        super(id);
+        this.input = document.createElement('input');
+        this.input.id = id;
+        this.input.type = 'text';
+        this.labelText = labelText;
+        this.input.addEventListener('keyup', (): void => {
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout((): void => {
+                this.parse();
+            }, 1000);
+        });
+        this.input.addEventListener('keydown', (): void => {
+            clearTimeout(this.timeout);
+        });
+        this.input.addEventListener('focusout', (): void => {
+            clearTimeout(this.timeout);
+            this.parse();
+        });
+        this.input.addEventListener('change', (): void => {
+            this.parse();
+        });
+    }
+
+    appendTo(formOrSection: FormAppender): void {
+        this.formOrSection = formOrSection;
+        const container = document.createElement('div');
+        container.classList.add('container', 'label-input');
+        const label = document.createElement('label');
+        label.htmlFor = this.id;
+        label.innerText = this.labelText;
+        container.appendChild(label);
+        container.appendChild(this.input);
+        this.formOrSection.appendInputElement(container);
+        setTimeout((): void => {
+            if(this.input.value != '') this.parse();
+        }, 250);
+    }
+
+    getInputValue(): string {
+        return this.input.value;
+    }
+
+    async parse(): Promise<string | undefined> {
+        return this.getInputValue();
+    }
+
+    getError(): boolean {
+        return false;
+    }
+}
+
 type OnSet = (value: boolean) => Promise<void>;
 
 export class BooleanInput extends InputElement<boolean> {
     private readonly labelText: string;
     private readonly slider: HTMLDivElement;
     private readonly feedback: HTMLSpanElement;
-    private formOrSection: Form | InputSection | undefined = undefined;
+    private formOrSection: FormAppender | undefined = undefined;
     private precompiledValue: boolean | undefined;
     private onSet: OnSet;
 
@@ -510,7 +576,7 @@ export class BooleanInput extends InputElement<boolean> {
         this.onSet = onSet;
     }
 
-    appendTo(formOrSection: Form | InputSection): void {
+    appendTo(formOrSection: FormAppender): void {
         this.formOrSection = formOrSection;
         const box = document.createElement('div');
         box.classList.add('box', 'input-feedback');
@@ -523,7 +589,7 @@ export class BooleanInput extends InputElement<boolean> {
         container.appendChild(this.slider);
         box.appendChild(container);
         box.appendChild(this.feedback);
-        this.formOrSection.appendChild(box);
+        this.formOrSection.appendInputElement(box);
     }
 
     getError(): boolean {
@@ -589,6 +655,40 @@ export class QuantityInput extends Input<number> {
     }
 }
 
+export class PriceInput extends Input<number> {
+    constructor(id: string, labelText: string, feedbackText: string) {
+        super(id, 'number', labelText, feedbackText);
+        this.input.classList.add('medium');
+    }
+
+    async parse(): Promise<number | undefined> {
+        const quantity: number = parseFloat(this.getInputValue());
+        if(quantity == this.precompiledValue) {
+            this.precompile(quantity);
+            return quantity;
+        }
+        if(isNaN(quantity)) {
+            this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a number!');
+            return undefined;
+        }
+        if(quantity <= 0) {
+            this.setError(true, this.feedbackText.replace('Input ', '') + ' must be a positive number!');
+            return undefined;
+        }
+        this.setError(false, 'Valid ' + this.feedbackText.replace('Input ', ''));
+        return quantity;
+    }
+
+    set(value: number): void {
+        this.setInputValue(value.toString());
+        this.parse();
+    }
+
+    changed(): boolean {
+        return parseFloat(this.input.value) != this.precompiledValue;
+    }
+}
+
 export class ExpirationInput extends Input<string> {
     private static readonly format: string = '(YYYY/MM/DD or DD/MM/YY)';
 
@@ -621,7 +721,7 @@ export class ExpirationInput extends Input<string> {
 }
 
 export class ApiFeedbackInput extends Input<string> {
-    private readonly url: string;
+    protected readonly url: string;
 
     constructor(id: string, type: string, labelText: string, feedbackText: string, url: string) {
         super(id, type, labelText, feedbackText);
@@ -660,6 +760,49 @@ export class ApiFeedbackInput extends Input<string> {
     }
 }
 
+export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
+    private readonly others: InputElement<any>[];
+
+    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, others: InputElement<any>[]) {
+        super(id, type, labelText, feedbackText, url);
+        this.others = others;
+    }
+
+    set(value: string): void {
+        this.setInputValue(value);
+        this.parse();
+    }
+
+    async parse(): Promise<string | undefined> {
+        const value = this.getInputValue()
+        if(value == this.precompiledValue) {
+            this.precompile(value);
+            return value;
+        }
+        const data: { [index: string]: any; } = {};
+        data[this.id] = this.getInputValue();
+        for(const e of this.others) {
+            data[e.id] = await e.parse();
+        }
+        return new Promise((resolve): void => {
+            $.ajax({
+                url: this.url,
+                method: 'GET',
+                data: data,
+                success: (res: { feedback: string; }) => {
+                    this.setError(res.feedback.includes('!'), res.feedback);
+                    resolve(this.getInputValue());
+                },
+                error: (req, err) => {
+                    console.error(err);
+                    this.setError(true, 'Server unreachable!');
+                    resolve(undefined);
+                }
+            });
+        });
+    }
+}
+
 type OnSelect<T> = (value: T) => void;
 
 export abstract class DropdownInput<T> extends InputElement<T> {
@@ -671,15 +814,22 @@ export abstract class DropdownInput<T> extends InputElement<T> {
         super(id);
         this.labelText = labelText;
         this.onSelect = (value: T): void => {
-            if(typeof value == 'string' || typeof value == 'number')
-                localStorage.setItem(this.id + '-select', value.toString());
+            switch(typeof value) {
+                case 'number':
+                case 'string':
+                    localStorage.setItem(this.id + '-select', value.toString());
+                    break;
+                case 'undefined':
+                    localStorage.setItem(this.id + '-select', 'undefined');
+                    break;
+            }
             onSelect(value);
         };
         this.select = document.createElement('select');
         this.select.id = id;
     }
 
-    appendTo(formOrSection: Form | InputSection): void {
+    appendTo(formOrSection: FormAppender): void {
         const container = document.createElement('div');
         container.classList.add('container', 'label-input');
         const label = document.createElement('label');
@@ -690,7 +840,7 @@ export abstract class DropdownInput<T> extends InputElement<T> {
         });
         container.appendChild(label);
         container.appendChild(this.select);
-        formOrSection.appendChild(container);
+        formOrSection.appendInputElement(container);
     }
 
     abstract parseValue(value: string): T;
@@ -709,6 +859,10 @@ export abstract class DropdownInput<T> extends InputElement<T> {
             case 'string':
             case 'number':
                 option.value = value.toString();
+                break;
+            case 'undefined':
+                option.value = 'undefined';
+                break;
         }
         option.innerText = text;
         this.select.appendChild(option);
@@ -749,63 +903,103 @@ export class UnitOfMeasurementInput extends DropdownInput<UnitOfMeasurement> {
     }
 }
 
-export class ApiDropdownInput extends DropdownInput<number> {
-    private readonly url: string;
-    private error: boolean;
+export enum PriceVisibility {
+    ALL = 'ALL',
+    MINIMUM = 'MINIMUM'
+}
 
-    constructor(id: string, labelText: string, url: string, onSelect: OnSelect<number> = (id: number): void => {}) {
+export class PriceVisibilityInput extends DropdownInput<PriceVisibility> {
+    constructor(id: string, labelText: string) {
+        super(id, labelText, (): void => {});
+        this.addOption(PriceVisibility.ALL, 'all');
+        this.addOption(PriceVisibility.MINIMUM, 'min');
+        const last: string | null = localStorage.getItem(this.id + '-select');
+        if(last != null)
+            this.precompile(this.parseValue(last));
+    }
+
+    parseValue(value: string): PriceVisibility {
+        for(const priceVisibility of Object.values(PriceVisibility)) {
+            if(priceVisibility == value)
+                return priceVisibility;
+        }
+        return PriceVisibility.MINIMUM;
+    }
+}
+
+export class ApiDropdownInput extends DropdownInput<number | undefined> {
+    private readonly url: string;
+    private readonly container: HTMLDivElement;
+    private readonly includeNone: boolean;
+    private error: boolean;
+    private readonly pendingGet: Promise<void>;
+
+    constructor(id: string, labelText: string, url: string, onSelect: OnSelect<number | undefined> = (id: number | undefined): void => {}, includeNone: boolean = false) {
         super(id, labelText, onSelect);
         this.url = url;
+        this.includeNone = includeNone;
         this.error = true;
+        this.container = document.createElement('div');
+        this.container.classList.add('container', 'label-input');
+        this.pendingGet = new Promise((resolve): void => {
+            $.ajax({
+                url: this.url,
+                method: 'GET',
+                data: {
+                    order: [ { name: 'asc' } ]
+                },
+                success: (res: { [index: string]: { id: number; name: string; }[] }) => {
+                    const match = this.url.match(/(?:\/([^\/]+))+?$/);
+                    if(match == null)
+                        return;
+                    const index = match[1];
+                    this.error = res[index].length == 0;
+                    for(const option of res[index]) {
+                        this.addOption(option.id, option.name);
+                    }
+                    const last: string | null = localStorage.getItem(this.id + '-select');
+                    if(last != null)
+                        this.precompile(this.parseValue(last));
+                    else if(!this.error)
+                        this.precompile(res[index][0].id);
+                    const label = document.createElement('label');
+                    label.htmlFor = this.id;
+                    label.innerText = this.labelText;
+                    this.container.appendChild(label);
+                    if(this.error) {
+                        const create = new RedirectButton('Create ' + this.labelText.replace(':', '').replace('Default ', ''), '/img/create.svg', this.url.replace('/api', '') + '/create');
+                        create.appendTo(this.container);
+                    }
+                    else {
+                        this.select.addEventListener('change', async (): Promise<void> => {
+                            this.onSelect(await this.parse());
+                        });
+                        this.container.appendChild(this.select);
+                    }
+                    resolve();
+                },
+                error: (req, err) => {
+                    console.error(err);
+                    resolve();
+                }
+            });
+        })
     }
 
-    appendTo(formOrSection: Form | InputSection): void {
-        const container = document.createElement('div');
-        container.classList.add('container', 'label-input');
-        formOrSection.appendChild(container);
-        $.ajax({
-            url: this.url,
-            method: 'GET',
-            data: {
-                order: [ { name: 'asc' } ]
-            },
-            success: (res: { [index: string]: { id: number; name: string; }[] }) => {
-                const match = this.url.match(/(?:\/([^\/]+))+?$/);
-                if(match == null)
-                    return;
-                const index = match[1];
-                this.error = res[index].length == 0;
-                for(const option of res[index]) {
-                    this.addOption(option.id, option.name);
-                }
-                const last: string | null = localStorage.getItem(this.id + '-select');
-                if(last != null)
-                    this.precompile(this.parseValue(last));
-                else if(!this.error)
-                    this.precompile(res[index][0].id);
-                formOrSection.validate();
-                const label = document.createElement('label');
-                label.htmlFor = this.id;
-                label.innerText = this.labelText;
-                container.appendChild(label);
-                if(this.error) {
-                    const create = new RedirectButton('Create ' + this.labelText.replace(':', '').replace('Default ', ''), '/img/create.svg', this.url.replace('/api', '') + '/create');
-                    create.appendTo(container);
-                }
-                else {
-                    this.select.addEventListener('change', async (): Promise<void> => {
-                        this.onSelect(await this.parse());
-                    });
-                    container.appendChild(this.select);
-                }
-            },
-            error: (req, err) => {
-                console.error(err);
-            }
-        });
+    appendTo(formOrSection: FormAppender): void {
+        formOrSection.appendInputElement(this.container);
+        if(this.includeNone)
+            this.addOption(undefined, '---');
     }
 
-    parseValue(value: string): number {
+    async parse(): Promise<number | undefined> {
+        await this.pendingGet;
+        return super.parse();
+    }
+
+    parseValue(value: string): number | undefined {
+        if(value == 'undefined')
+            return undefined;
         return parseInt(value);
     }
 
@@ -814,7 +1008,7 @@ export class ApiDropdownInput extends DropdownInput<number> {
     }
 }
 
-export abstract class InputSection extends InputElement<JsonObject> {
+export abstract class InputSection extends InputElement<JsonObject> implements FormAppender {
     private readonly title: string;
     private readonly elements: FormAppendable[];
     protected readonly section: HTMLDivElement;
@@ -835,13 +1029,13 @@ export abstract class InputSection extends InputElement<JsonObject> {
         this.validate();
     }
 
-    appendChild(node: HTMLElement): void {
+    appendInputElement(node: HTMLElement): void {
         this.section.appendChild(node);
     }
 
     appendTo(form: Form): void {
         this.form = form;
-        form.appendChild(this.section);
+        form.appendInputElement(this.section);
     }
 
     getError(): boolean {

@@ -1,7 +1,7 @@
 import { UnitOfMeasurement } from "./form.js";
 import { defaultStatusCode, RequireNonNull } from "./utils.js";
 export class Table {
-    constructor(url, resourceName, groups, headers, footer = true) {
+    constructor(url, resourceName, groups, headers, footer = true, preload = true) {
         var _a;
         this.url = url;
         this.resourceName = resourceName;
@@ -29,9 +29,10 @@ export class Table {
         this.page = 0;
         this.footer = footer ? new TableFooter(this) : null;
         (_a = this.footer) === null || _a === void 0 ? void 0 : _a.appendTo(this);
-        this.update();
+        if (preload)
+            this.update();
     }
-    appendChild(node) {
+    appendSection(node) {
         this.table.appendChild(node);
     }
     appendChildToGroups(node) {
@@ -94,6 +95,50 @@ export class Table {
     }
     update() {
         const data = { page: undefined, order: this.order };
+        if (this.footer != null)
+            data.page = this.page;
+        $.ajax({
+            url: this.url,
+            method: 'GET',
+            data: data,
+            contentType: 'application/json',
+            success: (res) => {
+                var _a;
+                (_a = this.footer) === null || _a === void 0 ? void 0 : _a.update(new PageHelper(this.page, res.pages));
+                this.body.innerHTML = '';
+                for (const element of res[this.resourceName]) {
+                    const row = this.parseElement(element);
+                    row.appendTo(this);
+                }
+            },
+            statusCode: defaultStatusCode
+        });
+    }
+}
+export class FilteredTable extends Table {
+    constructor(url, resourceName, groups, headers, filters, footer = true) {
+        super(url, resourceName, groups, headers, footer, false);
+        this.filters = filters;
+        this.filtersDiv = RequireNonNull.getElementById('filters');
+        for (const f of filters) {
+            f.appendTo(this);
+        }
+        this.update();
+    }
+    appendInputElement(node) {
+        this.filtersDiv.appendChild(node);
+    }
+    validate() { }
+    async getFilter() {
+        const filter = {};
+        for (const f of this.filters) {
+            filter[f.id] = await f.parse();
+        }
+        return filter;
+    }
+    async update() {
+        const data = { page: undefined, order: this.order, filter: await this.getFilter() };
+        console.log(data);
         if (this.footer != null)
             data.page = this.page;
         $.ajax({
@@ -406,7 +451,7 @@ export class TableFooter {
         td.appendChild(div);
         tr.appendChild(td);
         tfoot.appendChild(tr);
-        table.appendChild(tfoot);
+        table.appendSection(tfoot);
     }
     update(pageHelper) {
         this.pageHelper = pageHelper;

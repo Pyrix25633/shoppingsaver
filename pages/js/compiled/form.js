@@ -16,7 +16,7 @@ export class Form {
         this.wrapper = wrapperId != undefined ? RequireNonNull.getElementById(wrapperId) : undefined;
         this.validate();
     }
-    appendChild(node) {
+    appendInputElement(node) {
         this.form.appendChild(node);
     }
     validate() {
@@ -72,13 +72,15 @@ export class Button {
         this.inFooter = inFooter;
     }
     appendTo(formOrSection) {
-        if (this.inFooter || formOrSection instanceof HTMLElement)
+        if (formOrSection instanceof HTMLElement)
             formOrSection.appendChild(this.button);
+        else if (this.inFooter)
+            formOrSection.appendInputElement(this.button);
         else {
             const div = document.createElement('div');
             div.classList.add('container');
             div.appendChild(this.button);
-            formOrSection.appendChild(div);
+            formOrSection.appendInputElement(div);
         }
     }
     addClickListener(listener) {
@@ -133,7 +135,7 @@ export class ActionButton extends Button {
         feedback.innerText = this.feedbackText;
         box.appendChild(container);
         box.appendChild(feedback);
-        formOrSection.appendChild(box);
+        formOrSection.appendInputElement(box);
     }
 }
 export class ApiCallButton extends ActionButton {
@@ -164,6 +166,7 @@ export class StructuredForm extends Form {
                     method: 'GET',
                     success: (res) => {
                         this.precompile(res);
+                        resolve();
                     },
                     statusCode: defaultStatusCode
                 });
@@ -177,7 +180,7 @@ export class StructuredForm extends Form {
         if (node instanceof HTMLButtonElement)
             this.footer.appendChild(node);
         else
-            super.appendChild(node);
+            super.appendInputElement(node);
     }
     precompile(res) {
         throw new Error('Method not implemented!');
@@ -200,7 +203,7 @@ export class InfoSpan {
         container.classList.add('container', 'label-input');
         container.appendChild(this.labelSpan);
         container.appendChild(this.valueSpan);
-        formOrSection.appendChild(container);
+        formOrSection.appendInputElement(container);
     }
     set(value) {
         this.valueSpan.innerText = value;
@@ -259,7 +262,7 @@ export class Input extends InputElement {
         container.appendChild(this.input);
         box.appendChild(container);
         box.appendChild(this.feedback);
-        this.formOrSection.appendChild(box);
+        this.formOrSection.appendInputElement(box);
         setTimeout(() => {
             if (this.input.value != '')
                 this.parse();
@@ -397,6 +400,57 @@ export class StringInput extends Input {
     }
 }
 StringInput.bulkSeparator = '~';
+export class StringFilterInput extends InputElement {
+    constructor(id, labelText) {
+        super(id);
+        this.formOrSection = undefined;
+        this.timeout = undefined;
+        this.input = document.createElement('input');
+        this.input.id = id;
+        this.input.type = 'text';
+        this.labelText = labelText;
+        this.input.addEventListener('keyup', () => {
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.parse();
+            }, 1000);
+        });
+        this.input.addEventListener('keydown', () => {
+            clearTimeout(this.timeout);
+        });
+        this.input.addEventListener('focusout', () => {
+            clearTimeout(this.timeout);
+            this.parse();
+        });
+        this.input.addEventListener('change', () => {
+            this.parse();
+        });
+    }
+    appendTo(formOrSection) {
+        this.formOrSection = formOrSection;
+        const container = document.createElement('div');
+        container.classList.add('container', 'label-input');
+        const label = document.createElement('label');
+        label.htmlFor = this.id;
+        label.innerText = this.labelText;
+        container.appendChild(label);
+        container.appendChild(this.input);
+        this.formOrSection.appendInputElement(container);
+        setTimeout(() => {
+            if (this.input.value != '')
+                this.parse();
+        }, 250);
+    }
+    getInputValue() {
+        return this.input.value;
+    }
+    async parse() {
+        return this.getInputValue();
+    }
+    getError() {
+        return false;
+    }
+}
 export class BooleanInput extends InputElement {
     constructor(id, labelText, feedbackText, onSet = async () => { }) {
         super(id);
@@ -429,7 +483,7 @@ export class BooleanInput extends InputElement {
         container.appendChild(this.slider);
         box.appendChild(container);
         box.appendChild(this.feedback);
-        this.formOrSection.appendChild(box);
+        this.formOrSection.appendInputElement(box);
     }
     getError() {
         return false;
@@ -483,6 +537,36 @@ export class QuantityInput extends Input {
     }
     changed() {
         return parseInt(this.input.value) != this.precompiledValue;
+    }
+}
+export class PriceInput extends Input {
+    constructor(id, labelText, feedbackText) {
+        super(id, 'number', labelText, feedbackText);
+        this.input.classList.add('medium');
+    }
+    async parse() {
+        const quantity = parseFloat(this.getInputValue());
+        if (quantity == this.precompiledValue) {
+            this.precompile(quantity);
+            return quantity;
+        }
+        if (isNaN(quantity)) {
+            this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a number!');
+            return undefined;
+        }
+        if (quantity <= 0) {
+            this.setError(true, this.feedbackText.replace('Input ', '') + ' must be a positive number!');
+            return undefined;
+        }
+        this.setError(false, 'Valid ' + this.feedbackText.replace('Input ', ''));
+        return quantity;
+    }
+    set(value) {
+        this.setInputValue(value.toString());
+        this.parse();
+    }
+    changed() {
+        return parseFloat(this.input.value) != this.precompiledValue;
     }
 }
 export class ExpirationInput extends Input {
@@ -549,13 +633,58 @@ export class ApiFeedbackInput extends Input {
         });
     }
 }
+export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
+    constructor(id, type, labelText, feedbackText, url, others) {
+        super(id, type, labelText, feedbackText, url);
+        this.others = others;
+    }
+    set(value) {
+        this.setInputValue(value);
+        this.parse();
+    }
+    async parse() {
+        const value = this.getInputValue();
+        if (value == this.precompiledValue) {
+            this.precompile(value);
+            return value;
+        }
+        const data = {};
+        data[this.id] = this.getInputValue();
+        for (const e of this.others) {
+            data[e.id] = await e.parse();
+        }
+        return new Promise((resolve) => {
+            $.ajax({
+                url: this.url,
+                method: 'GET',
+                data: data,
+                success: (res) => {
+                    this.setError(res.feedback.includes('!'), res.feedback);
+                    resolve(this.getInputValue());
+                },
+                error: (req, err) => {
+                    console.error(err);
+                    this.setError(true, 'Server unreachable!');
+                    resolve(undefined);
+                }
+            });
+        });
+    }
+}
 export class DropdownInput extends InputElement {
     constructor(id, labelText, onSelect) {
         super(id);
         this.labelText = labelText;
         this.onSelect = (value) => {
-            if (typeof value == 'string' || typeof value == 'number')
-                localStorage.setItem(this.id + '-select', value.toString());
+            switch (typeof value) {
+                case 'number':
+                case 'string':
+                    localStorage.setItem(this.id + '-select', value.toString());
+                    break;
+                case 'undefined':
+                    localStorage.setItem(this.id + '-select', 'undefined');
+                    break;
+            }
             onSelect(value);
         };
         this.select = document.createElement('select');
@@ -572,7 +701,7 @@ export class DropdownInput extends InputElement {
         });
         container.appendChild(label);
         container.appendChild(this.select);
-        formOrSection.appendChild(container);
+        formOrSection.appendInputElement(container);
     }
     async parse() {
         return this.parseValue(this.select.value);
@@ -586,6 +715,10 @@ export class DropdownInput extends InputElement {
             case 'string':
             case 'number':
                 option.value = value.toString();
+                break;
+            case 'undefined':
+                option.value = 'undefined';
+                break;
         }
         option.innerText = text;
         this.select.appendChild(option);
@@ -622,58 +755,92 @@ export class UnitOfMeasurementInput extends DropdownInput {
         return UnitOfMeasurement.PIECES;
     }
 }
-export class ApiDropdownInput extends DropdownInput {
-    constructor(id, labelText, url, onSelect = (id) => { }) {
-        super(id, labelText, onSelect);
-        this.url = url;
-        this.error = true;
-    }
-    appendTo(formOrSection) {
-        const container = document.createElement('div');
-        container.classList.add('container', 'label-input');
-        formOrSection.appendChild(container);
-        $.ajax({
-            url: this.url,
-            method: 'GET',
-            data: {
-                order: [{ name: 'asc' }]
-            },
-            success: (res) => {
-                const match = this.url.match(/(?:\/([^\/]+))+?$/);
-                if (match == null)
-                    return;
-                const index = match[1];
-                this.error = res[index].length == 0;
-                for (const option of res[index]) {
-                    this.addOption(option.id, option.name);
-                }
-                const last = localStorage.getItem(this.id + '-select');
-                if (last != null)
-                    this.precompile(this.parseValue(last));
-                else if (!this.error)
-                    this.precompile(res[index][0].id);
-                formOrSection.validate();
-                const label = document.createElement('label');
-                label.htmlFor = this.id;
-                label.innerText = this.labelText;
-                container.appendChild(label);
-                if (this.error) {
-                    const create = new RedirectButton('Create ' + this.labelText.replace(':', '').replace('Default ', ''), '/img/create.svg', this.url.replace('/api', '') + '/create');
-                    create.appendTo(container);
-                }
-                else {
-                    this.select.addEventListener('change', async () => {
-                        this.onSelect(await this.parse());
-                    });
-                    container.appendChild(this.select);
-                }
-            },
-            error: (req, err) => {
-                console.error(err);
-            }
-        });
+export var PriceVisibility;
+(function (PriceVisibility) {
+    PriceVisibility["ALL"] = "ALL";
+    PriceVisibility["MINIMUM"] = "MINIMUM";
+})(PriceVisibility || (PriceVisibility = {}));
+export class PriceVisibilityInput extends DropdownInput {
+    constructor(id, labelText) {
+        super(id, labelText, () => { });
+        this.addOption(PriceVisibility.ALL, 'all');
+        this.addOption(PriceVisibility.MINIMUM, 'min');
+        const last = localStorage.getItem(this.id + '-select');
+        if (last != null)
+            this.precompile(this.parseValue(last));
     }
     parseValue(value) {
+        for (const priceVisibility of Object.values(PriceVisibility)) {
+            if (priceVisibility == value)
+                return priceVisibility;
+        }
+        return PriceVisibility.MINIMUM;
+    }
+}
+export class ApiDropdownInput extends DropdownInput {
+    constructor(id, labelText, url, onSelect = (id) => { }, includeNone = false) {
+        super(id, labelText, onSelect);
+        this.url = url;
+        this.includeNone = includeNone;
+        this.error = true;
+        this.container = document.createElement('div');
+        this.container.classList.add('container', 'label-input');
+        this.pendingGet = new Promise((resolve) => {
+            $.ajax({
+                url: this.url,
+                method: 'GET',
+                data: {
+                    order: [{ name: 'asc' }]
+                },
+                success: (res) => {
+                    const match = this.url.match(/(?:\/([^\/]+))+?$/);
+                    if (match == null)
+                        return;
+                    const index = match[1];
+                    this.error = res[index].length == 0;
+                    for (const option of res[index]) {
+                        this.addOption(option.id, option.name);
+                    }
+                    const last = localStorage.getItem(this.id + '-select');
+                    if (last != null)
+                        this.precompile(this.parseValue(last));
+                    else if (!this.error)
+                        this.precompile(res[index][0].id);
+                    const label = document.createElement('label');
+                    label.htmlFor = this.id;
+                    label.innerText = this.labelText;
+                    this.container.appendChild(label);
+                    if (this.error) {
+                        const create = new RedirectButton('Create ' + this.labelText.replace(':', '').replace('Default ', ''), '/img/create.svg', this.url.replace('/api', '') + '/create');
+                        create.appendTo(this.container);
+                    }
+                    else {
+                        this.select.addEventListener('change', async () => {
+                            this.onSelect(await this.parse());
+                        });
+                        this.container.appendChild(this.select);
+                    }
+                    resolve();
+                },
+                error: (req, err) => {
+                    console.error(err);
+                    resolve();
+                }
+            });
+        });
+    }
+    appendTo(formOrSection) {
+        formOrSection.appendInputElement(this.container);
+        if (this.includeNone)
+            this.addOption(undefined, '---');
+    }
+    async parse() {
+        await this.pendingGet;
+        return super.parse();
+    }
+    parseValue(value) {
+        if (value == 'undefined')
+            return undefined;
         return parseInt(value);
     }
     getError() {
@@ -696,12 +863,12 @@ export class InputSection extends InputElement {
             input.appendTo(this);
         this.validate();
     }
-    appendChild(node) {
+    appendInputElement(node) {
         this.section.appendChild(node);
     }
     appendTo(form) {
         this.form = form;
-        form.appendChild(this.section);
+        form.appendInputElement(this.section);
     }
     getError() {
         return this.error;

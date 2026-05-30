@@ -11,4 +11,6 @@ const brandsButton = new RedirectButton('Brands', '/img/brands.svg', '/brands', 
 brandsButton.appendTo(indexDiv);
 const supermarketsButton = new RedirectButton('Supermarkets', '/img/supermarkets.svg', '/supermarkets', false);
 supermarketsButton.appendTo(indexDiv);
+const productsButton = new RedirectButton('Products', '/img/products.svg', '/products', false);
+productsButton.appendTo(indexDiv);
 showPage();

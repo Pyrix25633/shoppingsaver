@@ -266,6 +266,99 @@ paths:
                     example: Valid Name
         "400":
           description: Bad Request
+  /feedbacks/brand-name:
+    get:
+      tags:
+        - feedbacks
+      summary: Brand's name feedback for the brand's creation form
+      description: Returns a user friendly brand's name feedback
+      operationId: feedbacks/brand-name
+      parameters:
+        - in: query
+          name: name
+          schema:
+            $ref: "#/components/schemas/name"
+          description: The brand's name
+          required: true
+      responses:
+        "200":
+          description: Brand's name feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: string
+                    example: Valid Name
+        "400":
+          description: Bad Request
+  /feedbacks/supermarket-name:
+    get:
+      tags:
+        - feedbacks
+      summary: Supermarket's name feedback for the supermarket's creation form
+      description: Returns a user friendly supermarket's name feedback
+      operationId: feedbacks/supermarket-name
+      parameters:
+        - in: query
+          name: name
+          schema:
+            $ref: "#/components/schemas/name"
+          description: The supermarket's name
+          required: true
+      responses:
+        "200":
+          description: Supermarket's name feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: string
+                    example: Valid Name
+        "400":
+          description: Bad Request
+  /feedbacks/product-name:
+    get:
+      tags:
+        - feedbacks
+      summary: Product's name feedback for the product's creation form
+      description: Returns a user friendly product's name feedback
+      operationId: feedbacks/product-name
+      parameters:
+        - in: query
+          name: name
+          schema:
+            $ref: "#/components/schemas/name"
+          description: The product's name
+          required: true
+        - in: query
+          name: brandId
+          schema:
+            $ref: "#/components/schemas/id"
+          description: The product's brand id
+          required: true
+        - in: query
+          name: supermarketId
+          schema:
+            $ref: "#/components/schemas/id"
+          description: The product's supermarket id
+          required: true
+      responses:
+        "200":
+          description: Category's name feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: string
+                    example: Valid Name
+        "400":
+          description: Bad Request
   /temp-users:
     post:
       tags:

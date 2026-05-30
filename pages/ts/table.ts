@@ -1,4 +1,4 @@
-import { Action, UnitOfMeasurement } from "./form.js";
+import { Action, FormAppender, InputElement, UnitOfMeasurement } from "./form.js";
 import { defaultStatusCode, RequireNonNull } from "./utils.js";
 
 type BaseOrderValue = 'asc' | 'desc' | undefined;
@@ -6,19 +6,19 @@ type OrderValue = { [index: string]: 'asc' | 'desc'; };
 type Order = OrderValue[];
 
 export abstract class Table {
-    private readonly url: string;
-    private readonly resourceName: string;
+    protected readonly url: string;
+    protected readonly resourceName: string;
     private readonly table: HTMLTableElement;
     private readonly groupsRow: HTMLTableRowElement | null;
     private readonly headersRow: HTMLTableRowElement;
     private readonly groups: TableHeaderGroup[] | null;
     private readonly headers: TableHeader[];
-    private order: Order;
-    private readonly body: HTMLTableSectionElement;
-    private readonly footer: TableFooter | null;
-    private page: number;
+    protected order: Order;
+    protected readonly body: HTMLTableSectionElement;
+    protected readonly footer: TableFooter | null;
+    protected page: number;
 
-    public constructor(url: string, resourceName: string, groups: TableHeaderGroup[] | null, headers: TableHeader[], footer: boolean = true) {
+    public constructor(url: string, resourceName: string, groups: TableHeaderGroup[] | null, headers: TableHeader[], footer: boolean = true, preload: boolean = true) {
         this.url = url;
         this.resourceName = resourceName;
 
@@ -48,10 +48,11 @@ export abstract class Table {
         this.footer = footer ? new TableFooter(this) : null;
         this.footer?.appendTo(this);
 
-        this.update();
+        if(preload)
+            this.update();
     }
 
-    public appendChild(node: HTMLTableSectionElement): void {
+    public appendSection(node: HTMLTableSectionElement): void {
         this.table.appendChild(node);
     }
 
@@ -143,6 +144,60 @@ export abstract class Table {
     }
 
     public abstract parseElement(element: Element): TableRow;
+}
+
+type Filter = { [index: string]: any; };
+
+export abstract class FilteredTable extends Table implements FormAppender {
+    private readonly filtersDiv: HTMLDivElement;
+    private readonly filters: InputElement<any>[];
+
+    public constructor(url: string, resourceName: string, groups: TableHeaderGroup[] | null, headers: TableHeader[], filters: InputElement<any>[], footer: boolean = true) {
+        super(url, resourceName, groups, headers, footer, false);
+        this.filters = filters;
+
+        this.filtersDiv = RequireNonNull.getElementById('filters') as HTMLDivElement;
+        for(const f of filters) {
+            f.appendTo(this);
+        }
+        this.update();
+    }
+
+    public appendInputElement(node: HTMLElement): void {
+        this.filtersDiv.appendChild(node);
+    }
+
+    public validate(): void {}
+
+    private async getFilter(): Promise<Filter> {
+        const filter: { [index: string]: any; } = {};
+        for(const f of this.filters) {
+            filter[f.id] = await f.parse()
+        }
+        return filter;
+    }
+
+    public async update(): Promise<void> {
+        const data: { page: undefined | number; order: Order; filter: Filter } = { page: undefined, order: this.order, filter: await this.getFilter() };
+        console.log(data);
+        if(this.footer != null)
+            data.page = this.page;
+        $.ajax({
+            url: this.url,
+            method: 'GET',
+            data: data,
+            contentType: 'application/json',
+            success: (res: { pages: number; [index: string]: any; }): void => {
+                this.footer?.update(new PageHelper(this.page, res.pages));
+                this.body.innerHTML = '';
+                for(const element of res[this.resourceName] as Element[]) {
+                    const row = this.parseElement(element);
+                    row.appendTo(this);
+                }
+            },
+            statusCode: defaultStatusCode
+        });
+    }
 }
 
 class GenericTableHeader {
@@ -502,7 +557,7 @@ export class TableFooter {
         td.appendChild(div);
         tr.appendChild(td);
         tfoot.appendChild(tr);
-        table.appendChild(tfoot);
+        table.appendSection(tfoot);
     }
 
     public update(pageHelper: PageHelper): void {

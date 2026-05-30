@@ -103,7 +103,7 @@ class TfaActivationInput extends InputElement<number> {
         inputFeedback.appendChild(this.feedback);
         this.box.appendChild(this.qr);
         this.box.appendChild(inputFeedback);
-        formOrSection.appendChild(this.box);
+        formOrSection.appendInputElement(this.box);
     }
 
     async parse(): Promise<number | undefined> {

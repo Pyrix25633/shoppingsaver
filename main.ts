@@ -10,7 +10,8 @@ import path from 'path';
 import { getTfaGenerateKey, getTfaValidateCode, getValidateToken, postLogin, postLoginTfa, postLogout, postRegenerateToken } from './lib/api/auth';
 import { getBrand, getBrands, patchBrand, postBrand } from './lib/api/brands';
 import { getCategories, getCategory, patchCategory, postCategory } from './lib/api/categories';
-import { getBrandNameFeedback, getCategoryNameFeedback, getConfirmUsernameFeedback, getLoginUsernameFeedback, getRegisterEmailFeedback, getRegisterUsernameFeedback, getSupermarketNameFeedback } from './lib/api/feedbacks';
+import { getBrandNameFeedback, getCategoryNameFeedback, getConfirmUsernameFeedback, getLoginUsernameFeedback, getProductNameFeedback, getRegisterEmailFeedback, getRegisterUsernameFeedback, getSupermarketNameFeedback } from './lib/api/feedbacks';
+import { delProduct, getProduct, getProducts, patchProduct, postProduct } from './lib/api/products';
 import { getSettings, getSettingsCustomization, getSettingsId, patchSettings } from './lib/api/settings';
 import { getSupermarket, getSupermarkets, patchSupermarket, postSupermarket } from './lib/api/supermarkets';
 import { postTempUser, postTempUserConfirm } from './lib/api/temp-users';
@@ -63,6 +64,8 @@ main.get('/api/feedbacks/category-name', getCategoryNameFeedback);
 main.get('/api/feedbacks/brand-name', getBrandNameFeedback);
 
 main.get('/api/feedbacks/supermarket-name', getSupermarketNameFeedback);
+
+main.get('/api/feedbacks/product-name', getProductNameFeedback);
 
 // temp-users //
 
@@ -125,6 +128,18 @@ main.post('/api/supermarkets', postSupermarket);
 main.get('/api/supermarkets/:supermarketId', getSupermarket);
 
 main.patch('/api/supermarkets/:supermarketId', patchSupermarket);
+
+// products //
+
+main.get('/api/products', getProducts);
+
+main.post('/api/products', postProduct);
+
+main.get('/api/products/:productId', getProduct);
+
+main.patch('/api/products/:productId', patchProduct);
+
+main.delete('/api/products/:productId', delProduct);
 
 // --server-- //
 
@@ -203,7 +218,7 @@ main.get('/brands', (req: Request, res: Response): void => {
 main.get('/brands/create', (req: Request, res: Response): void => {
     res.sendFile(path.resolve(__dirname, './pages/brand-create.html'));
 });
-main.get('/brands/:categoryId/edit', (req: Request, res: Response): void => {
+main.get('/brands/:brandId/edit', (req: Request, res: Response): void => {
     res.sendFile(path.resolve(__dirname, './pages/brand-edit.html'));
 });
 
@@ -213,6 +228,19 @@ main.get('/supermarkets', (req: Request, res: Response): void => {
 main.get('/supermarkets/create', (req: Request, res: Response): void => {
     res.sendFile(path.resolve(__dirname, './pages/supermarket-create.html'));
 });
-main.get('/supermarkets/:categoryId/edit', (req: Request, res: Response): void => {
+main.get('/supermarkets/:supermarketId/edit', (req: Request, res: Response): void => {
     res.sendFile(path.resolve(__dirname, './pages/supermarket-edit.html'));
+});
+
+main.get('/products', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/products.html'));
+});
+main.get('/products/create', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/product-create.html'));
+});
+main.get('/products/:productId/edit', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/product-edit.html'));
+});
+main.get('/products/:productId/delete', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/product-delete.html'));
 });
