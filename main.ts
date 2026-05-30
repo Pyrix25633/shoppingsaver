@@ -1,0 +1,218 @@
+import bodyParser from 'body-parser';
+import cookieParser from "cookie-parser";
+import cors from 'cors';
+import express, { Express, Request, Response } from 'express';
+import fs from 'fs';
+import helmet from 'helmet';
+import http from 'http';
+import https from 'https';
+import path from 'path';
+import { getTfaGenerateKey, getTfaValidateCode, getValidateToken, postLogin, postLoginTfa, postLogout, postRegenerateToken } from './lib/api/auth';
+import { getBrand, getBrands, patchBrand, postBrand } from './lib/api/brands';
+import { getCategories, getCategory, patchCategory, postCategory } from './lib/api/categories';
+import { getBrandNameFeedback, getCategoryNameFeedback, getConfirmUsernameFeedback, getLoginUsernameFeedback, getRegisterEmailFeedback, getRegisterUsernameFeedback, getSupermarketNameFeedback } from './lib/api/feedbacks';
+import { getSettings, getSettingsCustomization, getSettingsId, patchSettings } from './lib/api/settings';
+import { getSupermarket, getSupermarkets, patchSupermarket, postSupermarket } from './lib/api/supermarkets';
+import { postTempUser, postTempUserConfirm } from './lib/api/temp-users';
+import { settings } from './lib/settings';
+
+const main: Express = express();
+const upgradeMain: Express = express();
+
+main.set('trust proxy', true);
+main.use(cookieParser());
+main.use(bodyParser.urlencoded({ extended: true }));
+main.use(bodyParser.json({ limit: '6mb' }));
+main.use(cors());
+main.use(helmet());
+main.use(helmet.contentSecurityPolicy({
+    useDefaults: false,
+    directives: {
+        "default-src": ["'self'"],
+        "base-uri": "'self'",
+        "font-src": ["'self'", "https:"],
+        "frame-ancestors": ["'self'"],
+        "img-src": ["'self'", "data:"],
+        "object-src": ["'none'"],
+        "script-src": ["'self'", "https:"],
+        "script-src-attr": "'none'",
+        "style-src": ["'self'", "https:", "data:", "'unsafe-inline'"],
+    }
+}));
+main.use('/css', express.static('./pages/css'));
+main.use('/js', express.static('./pages/js'));
+main.use('/img', express.static('./pages/img'));
+main.use('/font', express.static('./pages/font'));
+main.use('/pfps', express.static('./pfps'));
+main.use('/chatLogos', express.static('./chatLogos'));
+
+// --api-- //
+
+// feedbacks //
+
+main.get('/api/feedbacks/register-username', getRegisterUsernameFeedback);
+
+main.get('/api/feedbacks/register-email', getRegisterEmailFeedback);
+
+main.get('/api/feedbacks/confirm-username', getConfirmUsernameFeedback);
+
+main.get('/api/feedbacks/login-username', getLoginUsernameFeedback);
+
+main.get('/api/feedbacks/category-name', getCategoryNameFeedback);
+
+main.get('/api/feedbacks/brand-name', getBrandNameFeedback);
+
+main.get('/api/feedbacks/supermarket-name', getSupermarketNameFeedback);
+
+// temp-users //
+
+main.post('/api/temp-users', postTempUser);
+
+main.post('/api/temp-users/:username/confirm', postTempUserConfirm);
+
+// auth //
+
+main.get('/api/auth/validate-token', getValidateToken);
+
+main.post('/api/auth/login', postLogin);
+
+main.post('/api/auth/login-tfa', postLoginTfa);
+
+main.get('/api/auth/tfa/generate-key', getTfaGenerateKey);
+
+main.get('/api/auth/tfa/validate-code', getTfaValidateCode);
+
+main.post('/api/auth/logout', postLogout);
+
+main.post('/api/auth/regenerate-token', postRegenerateToken);
+
+// settings //
+
+main.get('/api/settings', getSettings);
+
+main.patch('/api/settings', patchSettings);
+
+main.get('/api/settings/customization', getSettingsCustomization);
+
+main.get('/api/settings/id', getSettingsId);
+
+// categories //
+
+main.get('/api/categories', getCategories);
+
+main.post('/api/categories', postCategory);
+
+main.get('/api/categories/:categoryId', getCategory);
+
+main.patch('/api/categories/:categoryId', patchCategory);
+
+// brands //
+
+main.get('/api/brands', getBrands);
+
+main.post('/api/brands', postBrand);
+
+main.get('/api/brands/:brandId', getBrand);
+
+main.patch('/api/brands/:brandId', patchBrand);
+
+// supermarkets //
+
+main.get('/api/supermarkets', getSupermarkets);
+
+main.post('/api/supermarkets', postSupermarket);
+
+main.get('/api/supermarkets/:supermarketId', getSupermarket);
+
+main.patch('/api/supermarkets/:supermarketId', patchSupermarket);
+
+// --server-- //
+
+if(settings.https.port != null) {
+    const options = {
+        key: fs.readFileSync(path.resolve(__dirname, settings.https.key)),
+        cert: fs.readFileSync(path.resolve(__dirname, settings.https.cert)),
+        passphrase: settings.https.passphrase
+    };
+    const server = https.createServer(options, main);
+    server.listen(settings.https.port, (): void => {
+        console.log('Server listening on Port ' + settings.https.port);
+    });
+    upgradeMain.all('*', (req, res): void => {
+        const port = settings.production ? '' : (':' + settings.https.port);
+        res.redirect(301, 'https://' + req.hostname + port + req.url);
+    });
+    const upgradeServer = http.createServer(upgradeMain);
+    upgradeServer.listen(settings.https.upgradePort, (): void => {
+        console.log('Upgrade Server listening on Port ' + settings.https.upgradePort);
+    });
+}
+else {
+    const server = http.createServer(main);
+    server.listen(settings.https.upgradePort, (): void => {
+        console.log('Server listening on Port ' + settings.https.upgradePort);
+    });
+}
+
+// --pages-- //
+
+main.get('/register', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/register.html'));
+});
+
+main.get('/terms-and-conditions', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/terms-and-conditions.html'));
+});
+
+main.get('/temp-users/:username/confirm', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/confirm.html'));
+});
+main.get('/confirm', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/confirm.html'));
+});
+
+main.get('/login', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/login.html'));
+});
+
+main.get('/settings', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/settings.html'));
+});
+
+main.get('/', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/index.html'));
+});
+
+main.get('/error', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/error.html'));
+});
+
+main.get('/categories', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/categories.html'));
+});
+main.get('/categories/create', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/category-create.html'));
+});
+main.get('/categories/:categoryId/edit', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/category-edit.html'));
+});
+
+main.get('/brands', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/brands.html'));
+});
+main.get('/brands/create', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/brand-create.html'));
+});
+main.get('/brands/:categoryId/edit', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/brand-edit.html'));
+});
+
+main.get('/supermarkets', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/supermarkets.html'));
+});
+main.get('/supermarkets/create', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/supermarket-create.html'));
+});
+main.get('/supermarkets/:categoryId/edit', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve(__dirname, './pages/supermarket-edit.html'));
+});

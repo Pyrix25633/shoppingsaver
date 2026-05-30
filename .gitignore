@@ -1,9 +1,10 @@
-#foodmanager
+#shoppingsaver
 lib/settings.ts
 certs/
 
 #node
 node_modules/
+package-lock.json
 
 #bash
 *.sh

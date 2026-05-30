@@ -1,0 +1,29 @@
+div.navbar {
+    border-radius: 4px;
+}
+
+button, input, select {
+    border-radius: 2px;
+}
+
+img.rounded {
+    border-radius: 5%;
+}
+
+div.panel {
+    border-radius: 10px;
+}
+
+div.slider {
+    border-radius: 5px;
+}
+div.slider div.slider-circle {
+    border-radius: 10%;
+}
+
+tr td:first-child {
+    border-radius: 3px 0 0 3px;
+}
+tr td:last-child {
+    border-radius: 0 3px 3px 0;
+}
