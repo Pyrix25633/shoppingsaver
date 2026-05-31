@@ -11,7 +11,7 @@ export async function getCategories(req: Request, res: Response): Promise<void> 
         const page = getOrUndefined(req.query.page, getInt);
         const order = getOrUndefined(req.query.order, getOrder);
         const categories = await findCategories(user.id, page, order);
-        const pages = await countCategoryPages();
+        const pages = await countCategoryPages(user.id);
         new Ok({ categories: categories, pages: pages }).send(res);
     } catch(e: any) {
         handleException(e, res);

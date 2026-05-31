@@ -3,7 +3,7 @@ import { findBrand } from "../database/brand";
 import { findCategory } from "../database/category";
 import { countProductPages, createProduct, deleteProduct, findProduct, findProducts, updateProduct } from "../database/product";
 import { findSupermarket } from "../database/supermarket";
-import { getName, getOrder, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
+import { getName, getOrder, getProductFilter, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
 import { getDecimal, getInt, getObject, getOrUndefined } from "../validation/type-validation";
 import { Created, Forbidden, handleException, NoContent, Ok } from "../web/response";
 import { validateToken } from "./auth";
@@ -13,9 +13,12 @@ export async function getProducts(req: Request, res: Response): Promise<void> {
         const user = await validateToken(req);
         const page = getOrUndefined(req.query.page, getInt);
         const order = getOrUndefined(req.query.order, getOrder);
-        //const filter = getOrUndefined(req.query.filter, );
-        const products = await findProducts(user.id, page, order);
-        const pages = await countProductPages();
+        const filter = getProductFilter(req.query.filter);
+        const products = await findProducts(user.id, page, order, filter);
+        //TODO: distinct from prices all and min
+        //! other table with userId, name and productId
+        //! attention to product deletion, update in general
+        const pages = await countProductPages(user.id, filter);
         new Ok({ products: products, pages: pages }).send(res);
     } catch(e: any) {
         handleException(e, res);

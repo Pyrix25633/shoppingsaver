@@ -41,8 +41,12 @@ export async function findBrands(userId: number, page: number | undefined, order
     });
 }
 
-export async function countBrandPages(): Promise<number> {
-    return Math.ceil(await prisma.brand.count() / settings.database.pageSize);
+export async function countBrandPages(userId: number): Promise<number> {
+    return Math.ceil(await prisma.brand.count({
+        where: {
+            userId: userId
+        }
+    }) / settings.database.pageSize);
 }
 
 export async function findBrand(id: number): Promise<Brand> {

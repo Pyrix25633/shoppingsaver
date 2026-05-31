@@ -11,7 +11,7 @@ export async function getSupermarkets(req: Request, res: Response): Promise<void
         const page = getOrUndefined(req.query.page, getInt);
         const order = getOrUndefined(req.query.order, getOrder);
         const supermarkets = await findSupermarkets(user.id, page, order);
-        const pages = await countSupermarketPages();
+        const pages = await countSupermarketPages(user.id);
         new Ok({ supermarkets: supermarkets, pages: pages }).send(res);
     } catch(e: any) {
         handleException(e, res);

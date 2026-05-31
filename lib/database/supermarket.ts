@@ -41,8 +41,12 @@ export async function findSupermarkets(userId: number, page: number | undefined,
     });
 }
 
-export async function countSupermarketPages(): Promise<number> {
-    return Math.ceil(await prisma.supermarket.count() / settings.database.pageSize);
+export async function countSupermarketPages(userId: number): Promise<number> {
+    return Math.ceil(await prisma.supermarket.count({
+        where: {
+            userId: userId
+        }
+    }) / settings.database.pageSize);
 }
 
 export async function findSupermarket(id: number): Promise<Supermarket> {

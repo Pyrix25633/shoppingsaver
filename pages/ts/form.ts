@@ -226,7 +226,7 @@ export abstract class StructuredForm extends Form {
         }
     }
 
-    appendChild(node: HTMLElement): void { //! Error
+    appendInputElement(node: HTMLElement): void {
         if(this.footer == undefined)
             this.footer = RequireNonNull.getElementById('footer') as HTMLDivElement;;
         if(node instanceof HTMLButtonElement)
@@ -293,10 +293,10 @@ export abstract class Input<T> extends InputElement<T> {
     public readonly input: HTMLInputElement;
     private readonly labelText: string;
     protected readonly feedbackText: string;
-    private readonly feedback: HTMLSpanElement;
+    protected readonly feedback: HTMLSpanElement;
     private timeout: NodeJS.Timeout | undefined = undefined;
     private error: boolean = true;
-    protected precompiledValue: T | undefined = undefined;
+    protected precompiledValue: T | undefined = undefined
 
     constructor(id: string, type: string, labelText: string, feedbackText: string) {
         super(id);
@@ -353,6 +353,7 @@ export abstract class Input<T> extends InputElement<T> {
             this.feedback.classList.replace('success', 'error');
         else
             this.feedback.classList.replace('error', 'success');
+        this.feedback.innerHTML = '';
         this.feedback.innerText = feedbackText;
         this.formOrSection?.validate();
     }
@@ -506,6 +507,7 @@ export class StringFilterInput extends InputElement<string> {
             clearTimeout(this.timeout);
             this.timeout = setTimeout((): void => {
                 this.parse();
+                this.formOrSection?.validate();
             }, 1000);
         });
         this.input.addEventListener('keydown', (): void => {
@@ -517,6 +519,7 @@ export class StringFilterInput extends InputElement<string> {
         });
         this.input.addEventListener('change', (): void => {
             this.parse();
+            this.formOrSection?.validate();
         });
     }
 
@@ -535,7 +538,9 @@ export class StringFilterInput extends InputElement<string> {
         }, 250);
     }
 
-    getInputValue(): string {
+    getInputValue(): string | undefined {
+        if(this.input.value == '')
+            return undefined;
         return this.input.value;
     }
 
@@ -722,10 +727,14 @@ export class ExpirationInput extends Input<string> {
 
 export class ApiFeedbackInput extends Input<string> {
     protected readonly url: string;
+    private redirectPath: string | undefined;
+    private redirectText: string | undefined;
 
-    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string) {
+    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, redirectPath: string | undefined = undefined, redirectText: string | undefined = undefined) {
         super(id, type, labelText, feedbackText);
         this.url = url;
+        this.redirectPath = redirectPath;
+        this.redirectText = redirectText;
     }
 
     set(value: string): void {
@@ -758,13 +767,28 @@ export class ApiFeedbackInput extends Input<string> {
             });
         });
     }
+
+    setError(error: boolean, feedbackText: string): void {
+        if(this.redirectPath != undefined && this.redirectText != undefined) {
+            const match = /(.*)({\w+}):(\d+)/.exec(feedbackText);
+            if(match != null) {
+                super.setError(error, match[1]);
+                const a = document.createElement('a');
+                a.href = this.redirectPath.replace(match[2], match[3]);
+                a.innerText = this.redirectText;
+                this.feedback.appendChild(a);
+                return;
+            }
+        }
+        super.setError(error, feedbackText);
+    }
 }
 
 export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
     private readonly others: InputElement<any>[];
 
-    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, others: InputElement<any>[]) {
-        super(id, type, labelText, feedbackText, url);
+    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, others: InputElement<any>[], redirectPath: string | undefined = undefined, redirectText: string | undefined = undefined) {
+        super(id, type, labelText, feedbackText, url, redirectPath, redirectText);
         this.others = others;
     }
 
@@ -809,6 +833,7 @@ export abstract class DropdownInput<T> extends InputElement<T> {
     protected readonly select: HTMLSelectElement;
     protected readonly labelText: string;
     protected readonly onSelect: OnSelect<T>;
+    protected formOrSection: FormAppender | undefined;
 
     constructor(id: string, labelText: string, onSelect: OnSelect<T>) {
         super(id);
@@ -823,6 +848,7 @@ export abstract class DropdownInput<T> extends InputElement<T> {
                     localStorage.setItem(this.id + '-select', 'undefined');
                     break;
             }
+            this.formOrSection?.validate();
             onSelect(value);
         };
         this.select = document.createElement('select');
@@ -830,6 +856,7 @@ export abstract class DropdownInput<T> extends InputElement<T> {
     }
 
     appendTo(formOrSection: FormAppender): void {
+        this.formOrSection = formOrSection;
         const container = document.createElement('div');
         container.classList.add('container', 'label-input');
         const label = document.createElement('label');
@@ -987,6 +1014,7 @@ export class ApiDropdownInput extends DropdownInput<number | undefined> {
     }
 
     appendTo(formOrSection: FormAppender): void {
+        this.formOrSection = formOrSection;
         formOrSection.appendInputElement(this.container);
         if(this.includeNone)
             this.addOption(undefined, '---');

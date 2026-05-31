@@ -167,7 +167,9 @@ export abstract class FilteredTable extends Table implements FormAppender {
         this.filtersDiv.appendChild(node);
     }
 
-    public validate(): void {}
+    public validate(): void {
+        this.update();
+    }
 
     private async getFilter(): Promise<Filter> {
         const filter: { [index: string]: any; } = {};
@@ -179,7 +181,6 @@ export abstract class FilteredTable extends Table implements FormAppender {
 
     public async update(): Promise<void> {
         const data: { page: undefined | number; order: Order; filter: Filter } = { page: undefined, order: this.order, filter: await this.getFilter() };
-        console.log(data);
         if(this.footer != null)
             data.page = this.page;
         $.ajax({

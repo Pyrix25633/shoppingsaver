@@ -173,7 +173,7 @@ export class StructuredForm extends Form {
             });
         }
     }
-    appendChild(node) {
+    appendInputElement(node) {
         if (this.footer == undefined)
             this.footer = RequireNonNull.getElementById('footer');
         ;
@@ -277,6 +277,7 @@ export class Input extends InputElement {
             this.feedback.classList.replace('success', 'error');
         else
             this.feedback.classList.replace('error', 'success');
+        this.feedback.innerHTML = '';
         this.feedback.innerText = feedbackText;
         (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
     }
@@ -412,7 +413,9 @@ export class StringFilterInput extends InputElement {
         this.input.addEventListener('keyup', () => {
             clearTimeout(this.timeout);
             this.timeout = setTimeout(() => {
+                var _a;
                 this.parse();
+                (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
             }, 1000);
         });
         this.input.addEventListener('keydown', () => {
@@ -423,7 +426,9 @@ export class StringFilterInput extends InputElement {
             this.parse();
         });
         this.input.addEventListener('change', () => {
+            var _a;
             this.parse();
+            (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
         });
     }
     appendTo(formOrSection) {
@@ -442,6 +447,8 @@ export class StringFilterInput extends InputElement {
         }, 250);
     }
     getInputValue() {
+        if (this.input.value == '')
+            return undefined;
         return this.input.value;
     }
     async parse() {
@@ -599,9 +606,11 @@ export class ExpirationInput extends Input {
 }
 ExpirationInput.format = '(YYYY/MM/DD or DD/MM/YY)';
 export class ApiFeedbackInput extends Input {
-    constructor(id, type, labelText, feedbackText, url) {
+    constructor(id, type, labelText, feedbackText, url, redirectPath = undefined, redirectText = undefined) {
         super(id, type, labelText, feedbackText);
         this.url = url;
+        this.redirectPath = redirectPath;
+        this.redirectText = redirectText;
     }
     set(value) {
         this.setInputValue(value);
@@ -632,10 +641,24 @@ export class ApiFeedbackInput extends Input {
             });
         });
     }
+    setError(error, feedbackText) {
+        if (this.redirectPath != undefined && this.redirectText != undefined) {
+            const match = /(.*)({\w+}):(\d+)/.exec(feedbackText);
+            if (match != null) {
+                super.setError(error, match[1]);
+                const a = document.createElement('a');
+                a.href = this.redirectPath.replace(match[2], match[3]);
+                a.innerText = this.redirectText;
+                this.feedback.appendChild(a);
+                return;
+            }
+        }
+        super.setError(error, feedbackText);
+    }
 }
 export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
-    constructor(id, type, labelText, feedbackText, url, others) {
-        super(id, type, labelText, feedbackText, url);
+    constructor(id, type, labelText, feedbackText, url, others, redirectPath = undefined, redirectText = undefined) {
+        super(id, type, labelText, feedbackText, url, redirectPath, redirectText);
         this.others = others;
     }
     set(value) {
@@ -676,6 +699,7 @@ export class DropdownInput extends InputElement {
         super(id);
         this.labelText = labelText;
         this.onSelect = (value) => {
+            var _a;
             switch (typeof value) {
                 case 'number':
                 case 'string':
@@ -685,12 +709,14 @@ export class DropdownInput extends InputElement {
                     localStorage.setItem(this.id + '-select', 'undefined');
                     break;
             }
+            (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
             onSelect(value);
         };
         this.select = document.createElement('select');
         this.select.id = id;
     }
     appendTo(formOrSection) {
+        this.formOrSection = formOrSection;
         const container = document.createElement('div');
         container.classList.add('container', 'label-input');
         const label = document.createElement('label');
@@ -830,6 +856,7 @@ export class ApiDropdownInput extends DropdownInput {
         });
     }
     appendTo(formOrSection) {
+        this.formOrSection = formOrSection;
         formOrSection.appendInputElement(this.container);
         if (this.includeNone)
             this.addOption(undefined, '---');

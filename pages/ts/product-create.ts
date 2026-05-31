@@ -15,7 +15,7 @@ const quantityInput = new QuantityInput('quantity', 'Quantity:', 'Input Quantity
 const itemPriceInput = new PriceInput('itemPrice', 'Item Price:', 'Input Item Price');
 const unitOfMeasurementInput = new UnitOfMeasurementInput('unitOfMeasurement', 'Unit:');
 const supermarketInput = new ApiDropdownInput('supermarketId', 'Supermarket:', '/api/supermarkets', refresh);
-const nameInput = new ApiMultiFieldFeedbackInput('name', 'text', 'Name:', 'Input Product Name', '/api/feedbacks/product-name', [brandInput, supermarketInput]);
+const nameInput = new ApiMultiFieldFeedbackInput('name', 'text', 'Name:', 'Input Product Name', '/api/feedbacks/product-name', [brandInput, supermarketInput], '/products/{productId}/edit', 'edit here');
 
 class CreateProductForm extends StructuredForm {
     constructor() {

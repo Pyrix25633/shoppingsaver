@@ -41,8 +41,12 @@ export async function findCategories(userId: number, page: number | undefined, o
     });
 }
 
-export async function countCategoryPages(): Promise<number> {
-    return Math.ceil(await prisma.category.count() / settings.database.pageSize);
+export async function countCategoryPages(userId: number): Promise<number> {
+    return Math.ceil(await prisma.category.count({
+        where: {
+            userId: userId
+        }
+    }) / settings.database.pageSize);
 }
 
 export async function findCategory(id: number): Promise<Category> {

@@ -1,7 +1,7 @@
 {
   "name": "shoppingsaver",
   "version": "1.0.0",
-  "description": "A web application to know which food and books you have and where they are",
+  "description": "A Web Application that helps you remember where things cost less",
   "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

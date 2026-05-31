@@ -128,7 +128,9 @@ export class FilteredTable extends Table {
     appendInputElement(node) {
         this.filtersDiv.appendChild(node);
     }
-    validate() { }
+    validate() {
+        this.update();
+    }
     async getFilter() {
         const filter = {};
         for (const f of this.filters) {
@@ -138,7 +140,6 @@ export class FilteredTable extends Table {
     }
     async update() {
         const data = { page: undefined, order: this.order, filter: await this.getFilter() };
-        console.log(data);
         if (this.footer != null)
             data.page = this.page;
         $.ajax({

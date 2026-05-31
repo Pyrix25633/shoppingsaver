@@ -11,7 +11,7 @@ export async function getBrands(req: Request, res: Response): Promise<void> {
         const page = getOrUndefined(req.query.page, getInt);
         const order = getOrUndefined(req.query.order, getOrder);
         const brands = await findBrands(user.id, page, order);
-        const pages = await countBrandPages();
+        const pages = await countBrandPages(user.id);
         new Ok({ brands: brands, pages: pages }).send(res);
     } catch(e: any) {
         handleException(e, res);

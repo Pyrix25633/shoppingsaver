@@ -1,6 +1,6 @@
 openapi: 3.0.2
 info:
-  description: A web application to know which food and books you have and where they are
+  description: A Web Application that helps you remember where things cost less
   version: 1.0.0
   title: Shopping Saver
   contact:
@@ -9,9 +9,7 @@ info:
     name: GPL-3.0
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
 servers:
-  - url: https://shoppingsaver.ddns.net/api/
   - url: https://shoppingsaver.my.to/api/
-  - url: https://shoppingsaver.8bit.ca/api/
 tags:
   - name: feedbacks
     description: Handles form feedbacks

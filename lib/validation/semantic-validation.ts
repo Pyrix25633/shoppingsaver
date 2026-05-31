@@ -1,10 +1,20 @@
 import { UnitOfMeasurement } from "@prisma/client";
 import { Customization } from "../database/user";
 import { BadRequest } from "../web/response";
-import { getArray, getBoolean, getInt, getNonEmptyString, getObject, getString } from "./type-validation";
+import { getArray, getBoolean, getInt, getNonEmptyString, getObject, getOrUndefined, getString } from "./type-validation";
 
 type OrderValue = { [index: string]: 'asc' | 'desc' | OrderValue; };
 export type Order = OrderValue[];
+export enum PriceVisibility {
+    ALL = 'ALL',
+    MINIMUM = 'MINIMUM'
+}
+export type ProductFilter = {
+    categoryId: number | undefined;
+    name: string | undefined;
+    supermarketId: number | undefined;
+    pricePriceVisibility: PriceVisibility;
+}
 
 const usernameRegex = /^(?:\w|-| ){3,32}$/;
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -104,4 +114,22 @@ export function getOrder(raw: any): Order {
     for(const value of parsed)
         getOrderValue(value);
     return parsed;
+}
+
+export function getPriceVisibility(raw: any): PriceVisibility {
+    const parsed = getNonEmptyString(raw);
+    for(const priceVisibility of Object.values(PriceVisibility)) {
+        if(priceVisibility == parsed)
+            return priceVisibility;
+    }
+    throw new BadRequest();
+}
+
+export function getProductFilter(raw: any): ProductFilter {
+    const parsed = getObject(raw);
+    parsed.categoryId = getOrUndefined(parsed.categoryId, getInt);
+    parsed.name = getOrUndefined(parsed.name, getString);
+    parsed.supermarketId = getOrUndefined(parsed.supermarketId, getInt);
+    parsed.priceVisibility = getPriceVisibility(parsed.priceVisibility);
+    return parsed as ProductFilter;
 }

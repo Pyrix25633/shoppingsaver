@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { isBrandNameInUse } from "../database/brand";
 import { isCategoryNameInUse } from "../database/category";
-import { isProductNameInUse, isProductNameValid } from "../database/product";
+import { findProductFromName, isProductNameInUse } from "../database/product";
 import { isSupermarketNameInUse } from "../database/supermarket";
 import { isTempUserEmailInUse, isTempUserUsernameInUse } from "../database/temp-user";
 import { isUserEmailInUse, isUserUsernameInUse } from "../database/user";
@@ -153,8 +153,8 @@ export async function getProductNameFeedback(req: Request, res: Response): Promi
             const supermarketId = getInt(req.query.supermarketId);
             const inUse = await isProductNameInUse(user.id, name);
             if(inUse) {
-                const valid = await isProductNameValid(user.id, name, brandId, supermarketId);
-                feedback = valid ? 'Other products with the same name' : 'Other products with the same name, brand and supermarket!'
+                const product = await findProductFromName(user.id, name, brandId, supermarketId);
+                feedback = product == null ? 'Other products with the same name' : 'Product already exists! {productId}:' + product.id;
             }
             else
                 feedback = 'Valid Name';
