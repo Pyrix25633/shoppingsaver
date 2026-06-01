@@ -932,14 +932,14 @@ export class UnitOfMeasurementInput extends DropdownInput<UnitOfMeasurement> {
 
 export enum PriceVisibility {
     ALL = 'ALL',
-    MINIMUM = 'MINIMUM'
+    BEST = 'BEST'
 }
 
 export class PriceVisibilityInput extends DropdownInput<PriceVisibility> {
     constructor(id: string, labelText: string) {
         super(id, labelText, (): void => {});
-        this.addOption(PriceVisibility.ALL, 'all');
-        this.addOption(PriceVisibility.MINIMUM, 'min');
+        this.addOption(PriceVisibility.ALL, 'All');
+        this.addOption(PriceVisibility.BEST, 'Best');
         const last: string | null = localStorage.getItem(this.id + '-select');
         if(last != null)
             this.precompile(this.parseValue(last));
@@ -950,7 +950,7 @@ export class PriceVisibilityInput extends DropdownInput<PriceVisibility> {
             if(priceVisibility == value)
                 return priceVisibility;
         }
-        return PriceVisibility.MINIMUM;
+        return PriceVisibility.BEST;
     }
 }
 

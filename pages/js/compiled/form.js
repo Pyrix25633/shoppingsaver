@@ -784,13 +784,13 @@ export class UnitOfMeasurementInput extends DropdownInput {
 export var PriceVisibility;
 (function (PriceVisibility) {
     PriceVisibility["ALL"] = "ALL";
-    PriceVisibility["MINIMUM"] = "MINIMUM";
+    PriceVisibility["BEST"] = "BEST";
 })(PriceVisibility || (PriceVisibility = {}));
 export class PriceVisibilityInput extends DropdownInput {
     constructor(id, labelText) {
         super(id, labelText, () => { });
-        this.addOption(PriceVisibility.ALL, 'all');
-        this.addOption(PriceVisibility.MINIMUM, 'min');
+        this.addOption(PriceVisibility.ALL, 'All');
+        this.addOption(PriceVisibility.BEST, 'Best');
         const last = localStorage.getItem(this.id + '-select');
         if (last != null)
             this.precompile(this.parseValue(last));
@@ -800,7 +800,7 @@ export class PriceVisibilityInput extends DropdownInput {
             if (priceVisibility == value)
                 return priceVisibility;
         }
-        return PriceVisibility.MINIMUM;
+        return PriceVisibility.BEST;
     }
 }
 export class ApiDropdownInput extends DropdownInput {

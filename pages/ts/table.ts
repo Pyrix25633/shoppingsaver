@@ -1,4 +1,4 @@
-import { Action, FormAppender, InputElement, UnitOfMeasurement } from "./form.js";
+import { FormAppender, InputElement, UnitOfMeasurement } from "./form.js";
 import { defaultStatusCode, RequireNonNull } from "./utils.js";
 
 type BaseOrderValue = 'asc' | 'desc' | undefined;
@@ -346,15 +346,20 @@ export class QuantityTableData extends TableData<{ quantity: number; unitOfMeasu
     }
 }
 
-export class ExpirationTableData extends TableData<string> {
+export class PriceTableData extends TableData<{ price: number; unitOfMeasurement?: UnitOfMeasurement; }> {
     public createTd(): HTMLTableCellElement {
-        if(this.value == null)
-            throw new Error('Invalid Expiration!');
-        const date = new Date(this.value);
-        const difference = (date.getTime() - new Date().getTime()) / (24*60*60*1000);
         const td = super.createTd();
-        td.innerText = date.toLocaleDateString('en-ZA');
-        td.classList.add(difference < 0 ? 'error' : (difference < 2 ? 'critical' : (difference < 7 ? 'warning' : 'success')));
+        if(this.value == null)
+            throw new Error('Invalid Quantity!');
+        td.innerText = this.value.price.toFixed(2) + ' €';
+        if(this.value.unitOfMeasurement != undefined) {
+            td.innerText += '/';
+            switch(this.value.unitOfMeasurement) {
+                case UnitOfMeasurement.PIECES: td.innerText += 'pc'; break;
+                case UnitOfMeasurement.GRAMS: td.innerText += 'kg'; break;
+                default: td.innerText += 'l';
+            }
+        }
         return td;
     }
 }
@@ -398,31 +403,6 @@ export class IconLinkTableData extends TableData<number> {
         img.addEventListener('click', () => {
             window.location.href = this.href.replace('{id}', this.value?.toString() ?? '');
         });
-        div.appendChild(img);
-        td.appendChild(div);
-        return td;
-    }
-}
-
-export class IconActionTableData extends TableData<number> {
-    private readonly action: Action;
-    private readonly src: string;
-
-    constructor(value: number, action: Action, src: string) {
-        super(value);
-        this.action = action;
-        this.src = src;
-    }
-
-    public createTd(): HTMLTableCellElement {
-        const td = document.createElement('td');
-        const div = document.createElement('div');
-        div.classList.add('container');
-        const img = document.createElement('img');
-        img.classList.add('button');
-        img.alt = 'Link Icon';
-        img.src = this.src;
-        img.addEventListener('click', this.action);
         div.appendChild(img);
         td.appendChild(div);
         return td;

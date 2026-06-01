@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { findBrand } from "../database/brand";
 import { findCategory } from "../database/category";
+import { prisma } from "../database/prisma";
 import { countProductPages, createProduct, deleteProduct, findProduct, findProducts, updateProduct } from "../database/product";
 import { findSupermarket } from "../database/supermarket";
-import { getName, getOrder, getProductFilter, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
+import { getOrder, getProductFilter, getProductName, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
 import { getDecimal, getInt, getObject, getOrUndefined } from "../validation/type-validation";
 import { Created, Forbidden, handleException, NoContent, Ok } from "../web/response";
 import { validateToken } from "./auth";
@@ -15,9 +16,6 @@ export async function getProducts(req: Request, res: Response): Promise<void> {
         const order = getOrUndefined(req.query.order, getOrder);
         const filter = getProductFilter(req.query.filter);
         const products = await findProducts(user.id, page, order, filter);
-        //TODO: distinct from prices all and min
-        //! other table with userId, name and productId
-        //! attention to product deletion, update in general
         const pages = await countProductPages(user.id, filter);
         new Ok({ products: products, pages: pages }).send(res);
     } catch(e: any) {
@@ -29,7 +27,7 @@ export async function postProduct(req: Request, res: Response): Promise<void> {
     try {
         const user = await validateToken(req);
         const body = getObject(req.body);
-        const name = getName(body.name);
+        const name = getProductName(body.name);
         const categoryId = getInt(body.categoryId);
         const brandId = getInt(body.brandId);
         const quantity = getQuantity(body.quantity);
@@ -74,21 +72,29 @@ export async function patchProduct(req: Request, res: Response): Promise<void> {
         const user = await validateToken(req);
         const id = getInt(req.params.productId);
         const body = getObject(req.body);
-        const name = getName(body.name);
+        const name = getProductName(body.name);
         const categoryId = getInt(body.categoryId);
         const brandId = getInt(body.brandId);
         const quantity = getQuantity(body.quantity);
         const itemPrice = getDecimal(body.itemPrice);
         const unitOfMeasurement = getUnitOfMeasurement(body.unitOfMeasurement);
         const supermarketId = getInt(body.supermarketId);
-        const product = await findProduct(id);
         const category = await findCategory(categoryId);
         const brand = await findBrand(brandId);
         const supermarket = await findSupermarket(supermarketId);
-        if(product.userId != user.id || category.userId != user.id || brand.userId != user.id || supermarket.userId != user.id)
+        if(category.userId != user.id || brand.userId != user.id || supermarket.userId != user.id)
             throw new Forbidden();
-        await updateProduct(id, name, categoryId, brandId, quantity, itemPrice, unitOfMeasurement, supermarketId);
-        new NoContent().send(res);
+        await prisma.$transaction(async (): Promise<void> => {
+            try {
+                const product = await findProduct(id);
+                if(product.userId != user.id)
+                    throw new Forbidden();
+                await updateProduct(product, name, categoryId, brandId, quantity, itemPrice, unitOfMeasurement, supermarketId);
+                new NoContent().send(res);
+            } catch(e: any) {
+                throw e;
+            }
+        });
     } catch(e: any) {
         handleException(e, res);
     }
@@ -98,10 +104,10 @@ export async function delProduct(req: Request, res: Response): Promise<void> {
     try {
         const user = await validateToken(req);
         const id = getInt(req.params.productId);
-        const stock = await findProduct(id);
-        if(stock.userId != user.id)
+        const product = await findProduct(id);
+        if(product.userId != user.id)
             throw new Forbidden();
-        await deleteProduct(id);
+        await deleteProduct(product);
         new NoContent().send(res);
     } catch(e: any) {
         handleException(e, res);

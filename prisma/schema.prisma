@@ -80,6 +80,7 @@ model Product {
   itemPrice         Decimal           @db.Decimal(4, 2)
   unitOfMeasurement UnitOfMeasurement
   price             Decimal           @db.Decimal(5, 2)
+  bestPrice         Boolean
   supermarket       Supermarket       @relation(fields: [supermarketId], references: [id])
   supermarketId     Int
 

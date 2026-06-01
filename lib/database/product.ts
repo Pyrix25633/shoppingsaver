@@ -1,7 +1,7 @@
 import { Product, UnitOfMeasurement } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { settings } from "../settings";
-import { Order, ProductFilter } from "../validation/semantic-validation";
+import { Order, PriceVisibility, ProductFilter } from "../validation/semantic-validation";
 import { NotFound, UnprocessableContent } from "../web/response";
 import { prisma } from "./prisma";
 
@@ -36,22 +36,59 @@ export async function findProductFromName(userId: number, name: string, brandId:
 
 export async function createProduct(userId: number, name: string, categoryId: number, brandId: number, quantity: number, itemPrice: Decimal, unitOfMeasurement: UnitOfMeasurement, supermarketId: number): Promise<Product> {
     try {
-        return await prisma.product.create({
-            data: {
-                userId: userId,
-                name: name,
-                brandId: brandId,
-                categoryId: categoryId,
-                quantity: quantity,
-                itemPrice: itemPrice,
-                unitOfMeasurement: unitOfMeasurement,
-                price: calculatePrice(quantity, unitOfMeasurement, itemPrice),
-                supermarketId: supermarketId
+        return await prisma.$transaction(async (): Promise<Product> => {
+            try {
+                const price = calculatePrice(quantity, unitOfMeasurement, itemPrice);
+                const bestPrice = await handlePossibleBestPriceChange(userId, name, price, undefined);
+                return await prisma.product.create({
+                    data: {
+                        userId: userId,
+                        name: name,
+                        brandId: brandId,
+                        categoryId: categoryId,
+                        quantity: quantity,
+                        itemPrice: itemPrice,
+                        unitOfMeasurement: unitOfMeasurement,
+                        price: price,
+                        bestPrice: bestPrice,
+                        supermarketId: supermarketId
+                    }
+                });
+            } catch(e: any) {
+                throw e;
             }
         });
     } catch(e: any) {
         throw new UnprocessableContent();
     }
+}
+
+async function findBestPrice(userId: number, name: string): Promise<Decimal | null> {
+    const product = await prisma.product.findFirst({
+        where: {
+            userId: userId,
+            name: name,
+            bestPrice: true
+        }
+    });
+    if(product == null)
+        return null;
+    return product.price;
+}
+
+async function findMinPrice(userId: number, name: string, excludeId: number): Promise<Decimal | null> {
+    return (await prisma.product.aggregate({
+        _min: {
+            price: true
+        },
+        where: {
+            id: {
+                not: excludeId
+            },
+            userId: userId,
+            name: name
+        }
+    }))._min.price;
 }
 
 export async function findProducts(userId: number, page: number | undefined, order: Order | undefined, filter: ProductFilter): Promise<{ name: string; }[]> {
@@ -71,6 +108,7 @@ export async function findProducts(userId: number, page: number | undefined, ord
             },
             quantity: true,
             itemPrice: true,
+            unitOfMeasurement: true,
             price: true,
             supermarket: {
                 select: {
@@ -84,7 +122,8 @@ export async function findProducts(userId: number, page: number | undefined, ord
             name: {
                 contains: filter.name
             },
-            supermarketId: filter.supermarketId
+            supermarketId: filter.supermarketId,
+            bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
         },
         orderBy: order,
         skip: page != undefined ? page * settings.database.pageSize : undefined,
@@ -100,7 +139,8 @@ export async function countProductPages(userId: number, filter: ProductFilter): 
             name: {
                 contains: filter.name
             },
-            supermarketId: filter.supermarketId
+            supermarketId: filter.supermarketId,
+            bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
         }
     }) / settings.database.pageSize);
 }
@@ -116,21 +156,79 @@ export async function findProduct(id: number): Promise<Product> {
     return product;
 }
 
-export async function updateProduct(id: number, name: string, categoryId: number, brandId: number, quantity: number, itemPrice: Decimal, unitOfMeasurement: UnitOfMeasurement, supermarketId: number): Promise<Product> {
+async function handlePossibleBestPriceChange(userId: number, name: string, newPrice: Decimal, excludeId: number | undefined): Promise<boolean> {
+    const best = excludeId != undefined ? await findMinPrice(userId, name, excludeId) : await findBestPrice(userId, name);
+    if(best == null)
+        return true;
+    if(best.gt(newPrice)) {
+        await updateProductsNotBestPrice(userId, name);
+        return true;
+    }
+    return best.eq(newPrice);
+}
+
+async function handleBestPrice(userId: number, oldName: string, oldPrice: Decimal, excludeId: number): Promise<void> {
+    const best = await findMinPrice(userId, oldName, excludeId);
+    if(best == null)
+        return;
+    if(best.eq(oldPrice))
+        return;
+    await prisma.product.updateMany({
+        data: {
+            bestPrice: true
+        },
+        where: {
+            userId: userId,
+            name: oldName,
+            price: best
+        }
+    });
+}
+
+export async function updateProduct(old: Product, name: string, categoryId: number, brandId: number, quantity: number, itemPrice: Decimal, unitOfMeasurement: UnitOfMeasurement, supermarketId: number): Promise<Product> {
     try {
-        return await prisma.product.update({
-            data: {
-                name: name,
-                categoryId: categoryId,
-                brandId: brandId,
-                quantity: quantity,
-                itemPrice: itemPrice,
-                unitOfMeasurement: unitOfMeasurement,
-                price: calculatePrice(quantity, unitOfMeasurement, itemPrice),
-                supermarketId: supermarketId
-            },
-            where: {
-                id: id
+        return await prisma.$transaction(async (): Promise<Product> => {
+            try {
+                const price = calculatePrice(quantity, unitOfMeasurement, itemPrice);
+                let bestPrice = old.bestPrice;
+                if(name == old.name) {
+                    if(price.gt(old.price)) {
+                        if(old.bestPrice)
+                            bestPrice = await handlePossibleBestPriceChange(old.userId, name, price, old.id);
+                        else
+                            bestPrice = false;
+                    }
+                    else if(price.lt(old.price)) {
+                        if(old.bestPrice) {
+                            await updateProductsNotBestPrice(old.userId, name);
+                            bestPrice = true;
+                        }
+                        else
+                            bestPrice = await handlePossibleBestPriceChange(old.userId, name, price, old.id);
+                    }
+                }
+                else {
+                    await handleBestPrice(old.userId, old.name, old.price, old.id); //For old name
+                    bestPrice = await handlePossibleBestPriceChange(old.userId, name, price, undefined); //For new name
+                }
+                return await prisma.product.update({
+                    data: {
+                        name: name,
+                        brandId: brandId,
+                        categoryId: categoryId,
+                        quantity: quantity,
+                        itemPrice: itemPrice,
+                        unitOfMeasurement: unitOfMeasurement,
+                        price: price,
+                        bestPrice: bestPrice,
+                        supermarketId: supermarketId
+                    },
+                    where: {
+                        id: old.id
+                    }
+                });
+            } catch(e: any) {
+                throw e;
             }
         });
     } catch(e: any) {
@@ -138,10 +236,29 @@ export async function updateProduct(id: number, name: string, categoryId: number
     }
 }
 
-export async function deleteProduct(id: number): Promise<Product> {
-    return prisma.product.delete({
-        where: {
-            id: id
-        }
-    });
+async function updateProductsNotBestPrice(userId: number, name: string): Promise<void> {
+    try {
+        await prisma.product.updateMany({
+            data: {
+                bestPrice: false,
+            },
+            where: {
+                userId: userId,
+                name: name
+            }
+        });
+    } catch(e: any) {
+        throw new UnprocessableContent();
+    }
+}
+
+export async function deleteProduct(old: Product): Promise<Product> {
+    return await prisma.$transaction(async (): Promise<Product> => {
+        await handleBestPrice(old.userId, old.name, old.price, old.id);
+        return prisma.product.delete({
+            where: {
+                id: old.id
+            }
+        });
+    });    
 }

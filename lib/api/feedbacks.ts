@@ -5,7 +5,7 @@ import { findProductFromName, isProductNameInUse } from "../database/product";
 import { isSupermarketNameInUse } from "../database/supermarket";
 import { isTempUserEmailInUse, isTempUserUsernameInUse } from "../database/temp-user";
 import { isUserEmailInUse, isUserUsernameInUse } from "../database/user";
-import { getEmail, getName, getUsername } from "../validation/semantic-validation";
+import { getEmail, getName, getProductName, getUsername } from "../validation/semantic-validation";
 import { getInt, getString } from "../validation/type-validation";
 import { Ok, handleException } from "../web/response";
 import { validateToken } from "./auth";
@@ -148,7 +148,7 @@ export async function getProductNameFeedback(req: Request, res: Response): Promi
         const user = await validateToken(req);
         let feedback: string;
         try {
-            const name = getName(req.query.name);
+            const name = getProductName(req.query.name);
             const brandId = getInt(req.query.brandId);
             const supermarketId = getInt(req.query.supermarketId);
             const inUse = await isProductNameInUse(user.id, name);

@@ -7,13 +7,13 @@ type OrderValue = { [index: string]: 'asc' | 'desc' | OrderValue; };
 export type Order = OrderValue[];
 export enum PriceVisibility {
     ALL = 'ALL',
-    MINIMUM = 'MINIMUM'
+    BEST = 'BEST'
 }
 export type ProductFilter = {
     categoryId: number | undefined;
     name: string | undefined;
     supermarketId: number | undefined;
-    pricePriceVisibility: PriceVisibility;
+    priceVisibility: PriceVisibility;
 }
 
 const usernameRegex = /^(?:\w|-| ){3,32}$/;
@@ -78,6 +78,12 @@ export function getName(raw: any): string {
     if(parsed.length < 3 || parsed.length > 32)
         throw new BadRequest();
     return parsed;
+}
+
+export function getProductName(raw: any): string {
+    const parsed = getName(raw);
+    parsed.replace(/\s+/, ' ');
+    return parsed.charAt(0).toUpperCase() + parsed.slice(1);
 }
 
 export function getQuantity(raw: any): number {

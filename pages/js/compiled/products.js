@@ -1,6 +1,6 @@
 import { ApiDropdownInput, PriceVisibilityInput, RedirectButton, StringFilterInput } from "./form.js";
 import { loadCustomization } from "./load-customization.js";
-import { FilteredTable, IconLinkTableData, LinkTableHeader, NumberTableData, QuantityTableData, StringTableData, TableHeader, TableRow } from "./table.js";
+import { FilteredTable, IconLinkTableData, LinkTableHeader, PriceTableData, QuantityTableData, StringTableData, TableHeader, TableRow } from "./table.js";
 import { showPage } from "./utils.js";
 await loadCustomization();
 class CategoriesTable extends FilteredTable {
@@ -33,8 +33,8 @@ class CategoriesTableRow extends TableRow {
             new StringTableData(element.name),
             new StringTableData(element.brand.name),
             new QuantityTableData({ quantity: element.quantity, unitOfMeasurement: element.unitOfMeasurement }),
-            new NumberTableData(element.itemPrice),
-            new NumberTableData(element.price),
+            new PriceTableData({ price: parseFloat(element.itemPrice) }),
+            new PriceTableData({ price: parseFloat(element.price), unitOfMeasurement: element.unitOfMeasurement }),
             new StringTableData(element.supermarket.name),
             new IconLinkTableData(element.id, '/products/{id}/edit', '/img/edit.svg'),
             new IconLinkTableData(element.id, '/products/{id}/delete', '/img/delete.svg')
