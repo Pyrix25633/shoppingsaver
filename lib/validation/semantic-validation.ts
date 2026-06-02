@@ -93,6 +93,8 @@ export function getPrice(raw: unknown): Decimal {
         const decimal = new Decimal(raw);
         if(!decimal.isFinite() || !decimal.isPos())
             throw new BadRequest();
+        if(!decimal.mul(100).round().div(100).eq(decimal))
+            throw new BadRequest();
         return decimal;
     } catch(e: any) {
         throw new BadRequest();

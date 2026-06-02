@@ -1,6 +1,6 @@
 import { ApiDropdownInput, ApiMultiFieldFeedbackInput, Button, PriceInput, QuantityInput, StructuredForm, UnitOfMeasurementInput } from "./form.js";
 import { loadCustomization } from "./load-customization.js";
-import { Response, getParameter, showPage } from "./utils.js";
+import { Response, defaultStatusCode, getParameter, showPage } from "./utils.js";
 
 await loadCustomization();
 
@@ -31,7 +31,7 @@ class EditSupermarketForm extends StructuredForm {
             supermarketInput
         ], new Button('Edit', '/img/confirm.svg', true), (res: Response): void => {
             window.location.href = '/products';
-        }, {}, undefined, true);
+        }, defaultStatusCode, undefined, true);
     }
 
     async getUrl(): Promise<string> {

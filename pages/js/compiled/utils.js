@@ -48,6 +48,7 @@ export class RequireNonNull {
     }
 }
 export class Auth {
+    static cookieName = 'shoppingsaver-auth';
     static getCookie() {
         const match = document.cookie.match(new RegExp(Auth.cookieName + "=(.+?)(?:;|$)"));
         if (match == null)
@@ -72,19 +73,20 @@ export class Auth {
         });
     }
 }
-Auth.cookieName = 'shoppingsaver-auth';
 const cachedCustomizationKey = 'cachedCustomization';
 export class Customization {
+    compactMode;
+    condensedFont;
+    aurebeshFont;
+    sharpMode;
     constructor(json) {
-        var _a, _b, _c, _d;
-        this.compactMode = (_a = json === null || json === void 0 ? void 0 : json.compactMode) !== null && _a !== void 0 ? _a : false;
-        this.condensedFont = (_b = json === null || json === void 0 ? void 0 : json.condensedFont) !== null && _b !== void 0 ? _b : false;
-        this.aurebeshFont = (_c = json === null || json === void 0 ? void 0 : json.aurebeshFont) !== null && _c !== void 0 ? _c : false;
-        this.sharpMode = (_d = json === null || json === void 0 ? void 0 : json.sharpMode) !== null && _d !== void 0 ? _d : false;
+        this.compactMode = json?.compactMode ?? false;
+        this.condensedFont = json?.condensedFont ?? false;
+        this.aurebeshFont = json?.aurebeshFont ?? false;
+        this.sharpMode = json?.sharpMode ?? false;
     }
     static loadCached() {
-        var _a;
-        return new Customization(JSON.parse((_a = localStorage.getItem(cachedCustomizationKey)) !== null && _a !== void 0 ? _a : 'null'));
+        return new Customization(JSON.parse(localStorage.getItem(cachedCustomizationKey) ?? 'null'));
     }
     static async get() {
         return new Promise((resolve) => {
@@ -103,6 +105,9 @@ export class Customization {
     }
 }
 export class CssManager {
+    compactModeCssLink;
+    sharpModeCssLink;
+    fontCssLink;
     constructor() {
         this.compactModeCssLink = RequireNonNull.getElementById('compact-mode-css');
         this.sharpModeCssLink = RequireNonNull.getElementById('sharp-mode-css');

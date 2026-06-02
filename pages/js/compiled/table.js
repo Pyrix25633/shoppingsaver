@@ -1,8 +1,18 @@
 import { UnitOfMeasurement } from "./form.js";
 import { defaultStatusCode, RequireNonNull } from "./utils.js";
 export class Table {
+    url;
+    resourceName;
+    table;
+    groupsRow;
+    headersRow;
+    groups;
+    headers;
+    order;
+    body;
+    footer;
+    page;
     constructor(url, resourceName, groups, headers, footer = true, preload = true) {
-        var _a;
         this.url = url;
         this.resourceName = resourceName;
         this.table = RequireNonNull.getElementById('table');
@@ -22,13 +32,13 @@ export class Table {
         for (const header of headers)
             header.appendTo(this);
         this.groups = groups;
-        for (const group of groups !== null && groups !== void 0 ? groups : [])
+        for (const group of groups ?? [])
             group.appendTo(this);
         this.body = document.createElement('tbody');
         this.table.appendChild(this.body);
         this.page = 0;
         this.footer = footer ? new TableFooter(this) : null;
-        (_a = this.footer) === null || _a === void 0 ? void 0 : _a.appendTo(this);
+        this.footer?.appendTo(this);
         if (preload)
             this.update();
     }
@@ -36,8 +46,7 @@ export class Table {
         this.table.appendChild(node);
     }
     appendChildToGroups(node) {
-        var _a;
-        (_a = this.groupsRow) === null || _a === void 0 ? void 0 : _a.appendChild(node);
+        this.groupsRow?.appendChild(node);
     }
     appendChildToHeaders(node) {
         this.headersRow.appendChild(node);
@@ -103,8 +112,7 @@ export class Table {
             data: data,
             contentType: 'application/json',
             success: (res) => {
-                var _a;
-                (_a = this.footer) === null || _a === void 0 ? void 0 : _a.update(new PageHelper(this.page, res.pages));
+                this.footer?.update(new PageHelper(this.page, res.pages));
                 this.body.innerHTML = '';
                 for (const element of res[this.resourceName]) {
                     const row = this.parseElement(element);
@@ -116,6 +124,8 @@ export class Table {
     }
 }
 export class FilteredTable extends Table {
+    filtersDiv;
+    filters;
     constructor(url, resourceName, groups, headers, filters, footer = true) {
         super(url, resourceName, groups, headers, footer, false);
         this.filters = filters;
@@ -148,8 +158,7 @@ export class FilteredTable extends Table {
             data: data,
             contentType: 'application/json',
             success: (res) => {
-                var _a;
-                (_a = this.footer) === null || _a === void 0 ? void 0 : _a.update(new PageHelper(this.page, res.pages));
+                this.footer?.update(new PageHelper(this.page, res.pages));
                 this.body.innerHTML = '';
                 for (const element of res[this.resourceName]) {
                     const row = this.parseElement(element);
@@ -161,6 +170,7 @@ export class FilteredTable extends Table {
     }
 }
 class GenericTableHeader {
+    text;
     constructor(text) {
         this.text = text;
     }
@@ -170,6 +180,10 @@ export var Extra;
     Extra[Extra["Link"] = 0] = "Link";
 })(Extra || (Extra = {}));
 export class TableHeader extends GenericTableHeader {
+    column;
+    orderImg;
+    order;
+    extra;
     constructor(text, column, extra = undefined) {
         super(text);
         this.column = column;
@@ -215,6 +229,7 @@ export class LinkTableHeader extends TableHeader {
     }
 }
 export class TableHeaderGroup extends GenericTableHeader {
+    colspan;
     constructor(text, colspan) {
         super(text);
         this.colspan = colspan;
@@ -237,6 +252,8 @@ export class EmptyTableHeaderGroup extends TableHeaderGroup {
     }
 }
 export class TableData {
+    value;
+    color;
     constructor(value) {
         this.value = value;
     }
@@ -304,21 +321,23 @@ export class PriceTableData extends TableData {
     }
 }
 export class LinkTableData extends TableData {
+    href;
     constructor(value, href) {
         super(value);
         this.href = href;
     }
     createTd() {
-        var _a;
         const td = document.createElement('td');
         const a = document.createElement('a');
-        a.innerText = (_a = this.value) !== null && _a !== void 0 ? _a : '';
+        a.innerText = this.value ?? '';
         a.href = this.href;
         td.appendChild(a);
         return td;
     }
 }
 export class IconLinkTableData extends TableData {
+    href;
+    src;
     constructor(value, href, src) {
         super(value);
         this.href = href;
@@ -333,8 +352,7 @@ export class IconLinkTableData extends TableData {
         img.alt = 'Link Icon';
         img.src = this.src;
         img.addEventListener('click', () => {
-            var _a, _b;
-            window.location.href = this.href.replace('{id}', (_b = (_a = this.value) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : '');
+            window.location.href = this.href.replace('{id}', this.value?.toString() ?? '');
         });
         div.appendChild(img);
         td.appendChild(div);
@@ -342,6 +360,8 @@ export class IconLinkTableData extends TableData {
     }
 }
 export class TableRow {
+    tableData;
+    row;
     constructor(element) {
         this.tableData = this.parseData(element);
         this.row = document.createElement('tr');
@@ -356,6 +376,12 @@ export class TableRow {
     }
 }
 export class PageHelper {
+    first;
+    previous;
+    current;
+    next;
+    last;
+    total;
     constructor(current, total) {
         this.first = 0;
         this.previous = current - 1;
@@ -372,8 +398,15 @@ export class PageHelper {
     }
 }
 export class TableFooter {
+    first;
+    previous;
+    current;
+    currentInputTimeout = undefined;
+    total;
+    next;
+    last;
+    pageHelper;
     constructor(table) {
-        this.currentInputTimeout = undefined;
         this.first = TableFooter.createImage('First', 'first');
         this.first.addEventListener('click', () => {
             table.setPage(this.pageHelper.first);

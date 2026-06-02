@@ -1,7 +1,15 @@
 import { RequireNonNull, defaultStatusCode } from './utils.js';
 export class Form {
+    url;
+    method;
+    form;
+    elements;
+    submitButton;
+    success;
+    statusCode;
+    wrapper;
+    valid = false;
     constructor(id, url, method, elements, submitButton, success, statusCode, wrapperId = undefined) {
-        this.valid = false;
         this.url = url;
         this.method = method;
         this.form = RequireNonNull.getElementById(id);
@@ -60,6 +68,8 @@ export class Form {
     }
 }
 export class Button {
+    button;
+    inFooter;
     constructor(text, iconSrc, inFooter = false) {
         this.button = document.createElement('button');
         this.button.innerText = text;
@@ -118,6 +128,7 @@ export class RedirectButton extends Button {
     }
 }
 export class ActionButton extends Button {
+    feedbackText;
     constructor(text, iconSrc, feedbackText, action = () => { }) {
         super(text, iconSrc);
         this.feedbackText = feedbackText;
@@ -139,6 +150,8 @@ export class ActionButton extends Button {
     }
 }
 export class ApiCallButton extends ActionButton {
+    url;
+    success;
     constructor(text, iconSrc, feedbackText, url, success) {
         super(text, iconSrc, feedbackText);
         this.url = url;
@@ -154,9 +167,10 @@ export class ApiCallButton extends ActionButton {
     }
 }
 export class StructuredForm extends Form {
+    footer = undefined;
+    cancelButton;
     constructor(id, url, method, inputs, submitButton, success, statusCode, wrapperId = undefined, precompile = false) {
         super(id, url, method, inputs, submitButton, success, statusCode, wrapperId);
-        this.footer = undefined;
         this.cancelButton = new CancelButton();
         this.cancelButton.appendTo(this);
         if (precompile) {
@@ -191,6 +205,8 @@ export class StructuredForm extends Form {
     }
 }
 export class InfoSpan {
+    labelSpan;
+    valueSpan;
     constructor(labelText) {
         this.labelSpan = document.createElement('span');
         this.labelSpan.classList.add('text');
@@ -210,6 +226,7 @@ export class InfoSpan {
     }
 }
 export class InputElement {
+    id;
     constructor(id) {
         this.id = id;
     }
@@ -218,12 +235,16 @@ export class InputElement {
     }
 }
 export class Input extends InputElement {
+    formOrSection = undefined;
+    input;
+    labelText;
+    feedbackText;
+    feedback;
+    timeout = undefined;
+    error = true;
+    precompiledValue = undefined;
     constructor(id, type, labelText, feedbackText) {
         super(id);
-        this.formOrSection = undefined;
-        this.timeout = undefined;
-        this.error = true;
-        this.precompiledValue = undefined;
         this.input = document.createElement('input');
         this.input.id = id;
         this.input.type = type;
@@ -269,7 +290,6 @@ export class Input extends InputElement {
         }, 250);
     }
     setError(error, feedbackText) {
-        var _a;
         this.error = error;
         if (!this.feedback.classList.contains('error') && !this.feedback.classList.contains('success'))
             this.feedback.classList.add('error');
@@ -279,7 +299,7 @@ export class Input extends InputElement {
             this.feedback.classList.replace('error', 'success');
         this.feedback.innerHTML = '';
         this.feedback.innerText = feedbackText;
-        (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
+        this.formOrSection?.validate();
     }
     getError() {
         return this.error;
@@ -291,7 +311,6 @@ export class Input extends InputElement {
         this.input.value = value;
     }
     precompile(value) {
-        var _a;
         this.precompiledValue = value;
         this.error = false;
         this.feedback.classList.remove('success', 'error');
@@ -301,7 +320,7 @@ export class Input extends InputElement {
             case 'number':
                 this.setInputValue(value.toString());
         }
-        (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
+        this.formOrSection?.validate();
     }
 }
 export class PasswordInput extends Input {
@@ -352,6 +371,10 @@ export class PasswordInput extends Input {
     }
 }
 export class StringInput extends Input {
+    minLength;
+    maxLength;
+    allowBulk;
+    static bulkSeparator = '~';
     constructor(id, labelText, feedbackText, minLength = 1, maxLength = 32, allowBulk = false) {
         super(id, 'text', labelText, feedbackText + (allowBulk ? ' (Bulk with \'' + StringInput.bulkSeparator + '\')' : ''));
         this.minLength = minLength;
@@ -400,12 +423,13 @@ export class StringInput extends Input {
         return this.input.value != this.precompiledValue;
     }
 }
-StringInput.bulkSeparator = '~';
 export class StringFilterInput extends InputElement {
+    formOrSection = undefined;
+    input;
+    labelText;
+    timeout = undefined;
     constructor(id, labelText) {
         super(id);
-        this.formOrSection = undefined;
-        this.timeout = undefined;
         this.input = document.createElement('input');
         this.input.id = id;
         this.input.type = 'text';
@@ -413,9 +437,8 @@ export class StringFilterInput extends InputElement {
         this.input.addEventListener('keyup', () => {
             clearTimeout(this.timeout);
             this.timeout = setTimeout(() => {
-                var _a;
                 this.parse();
-                (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
+                this.formOrSection?.validate();
             }, 1000);
         });
         this.input.addEventListener('keydown', () => {
@@ -426,9 +449,8 @@ export class StringFilterInput extends InputElement {
             this.parse();
         });
         this.input.addEventListener('change', () => {
-            var _a;
             this.parse();
-            (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
+            this.formOrSection?.validate();
         });
     }
     appendTo(formOrSection) {
@@ -459,9 +481,14 @@ export class StringFilterInput extends InputElement {
     }
 }
 export class BooleanInput extends InputElement {
+    labelText;
+    slider;
+    feedback;
+    formOrSection = undefined;
+    precompiledValue;
+    onSet;
     constructor(id, labelText, feedbackText, onSet = async () => { }) {
         super(id);
-        this.formOrSection = undefined;
         this.labelText = labelText;
         this.slider = document.createElement('div');
         this.slider.id = this.id;
@@ -570,12 +597,12 @@ export class PriceInput extends Input {
     }
 }
 export class ExpirationInput extends Input {
+    static format = '(YYYY/MM/DD or DD/MM/YY)';
     constructor(id, labelText, feedbackText) {
         super(id, 'text', labelText, feedbackText + ' ' + ExpirationInput.format);
         this.input.classList.add("date");
     }
     async parse() {
-        var _a;
         let expiration = this.input.value;
         if (expiration == this.precompiledValue) {
             this.precompile(expiration);
@@ -587,7 +614,7 @@ export class ExpirationInput extends Input {
             return undefined;
         }
         if (match[1] == undefined)
-            expiration = ((_a = match[5]) !== null && _a !== void 0 ? _a : '20' + match[6]) + '/' + match[4] + '/' + match[3];
+            expiration = (match[5] ?? '20' + match[6]) + '/' + match[4] + '/' + match[3];
         const expirationDate = new Date(expiration);
         if (expirationDate.toString() == 'Invalid Date' || isNaN(expirationDate.getTime())) {
             this.setError(true, 'Invalid Date!');
@@ -597,8 +624,10 @@ export class ExpirationInput extends Input {
         return expirationDate.getFullYear() + '/' + (expirationDate.getMonth() + 1) + '/' + expirationDate.getDate();
     }
 }
-ExpirationInput.format = '(YYYY/MM/DD or DD/MM/YY)';
 export class ApiFeedbackInput extends Input {
+    url;
+    redirectPath;
+    redirectText;
     constructor(id, type, labelText, feedbackText, url, redirectPath = undefined, redirectText = undefined) {
         super(id, type, labelText, feedbackText);
         this.url = url;
@@ -650,6 +679,7 @@ export class ApiFeedbackInput extends Input {
     }
 }
 export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
+    others;
     constructor(id, type, labelText, feedbackText, url, others, redirectPath = undefined, redirectText = undefined) {
         super(id, type, labelText, feedbackText, url, redirectPath, redirectText);
         this.others = others;
@@ -688,11 +718,14 @@ export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
     }
 }
 export class DropdownInput extends InputElement {
+    select;
+    labelText;
+    onSelect;
+    formOrSection;
     constructor(id, labelText, onSelect) {
         super(id);
         this.labelText = labelText;
         this.onSelect = (value) => {
-            var _a;
             switch (typeof value) {
                 case 'number':
                 case 'string':
@@ -702,7 +735,7 @@ export class DropdownInput extends InputElement {
                     localStorage.setItem(this.id + '-select', 'undefined');
                     break;
             }
-            (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
+            this.formOrSection?.validate();
             onSelect(value);
         };
         this.select = document.createElement('select');
@@ -797,6 +830,11 @@ export class PriceVisibilityInput extends DropdownInput {
     }
 }
 export class ApiDropdownInput extends DropdownInput {
+    url;
+    container;
+    includeNone;
+    error;
+    pendingGet;
     constructor(id, labelText, url, onSelect = (id) => { }, includeNone = false) {
         super(id, labelText, onSelect);
         this.url = url;
@@ -868,10 +906,13 @@ export class ApiDropdownInput extends DropdownInput {
     }
 }
 export class InputSection extends InputElement {
+    title;
+    elements;
+    section;
+    form = undefined;
+    error = true;
     constructor(title, elements) {
         super('');
-        this.form = undefined;
-        this.error = true;
         this.title = title;
         this.elements = elements;
         this.section = document.createElement('div');
@@ -894,12 +935,11 @@ export class InputSection extends InputElement {
         return this.error;
     }
     validate() {
-        var _a;
         this.error = false;
         for (const input of this.elements) {
             if (input instanceof InputElement)
                 this.error = this.error || input.getError();
         }
-        (_a = this.form) === null || _a === void 0 ? void 0 : _a.validate();
+        this.form?.validate();
     }
 }

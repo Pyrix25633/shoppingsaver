@@ -37,12 +37,17 @@ class SessionDurationInput extends Input {
     }
 }
 class TfaActivationInput extends InputElement {
+    formOrSection = undefined;
+    box;
+    qr;
+    labelText;
+    codeInput;
+    feedback;
+    timeout = undefined;
+    key = undefined;
+    error = true;
     constructor() {
         super('tfa-activation');
-        this.formOrSection = undefined;
-        this.timeout = undefined;
-        this.key = undefined;
-        this.error = true;
         this.box = document.createElement('div');
         this.box.classList.add('box');
         this.qr = document.createElement('img');
@@ -132,14 +137,13 @@ class TfaActivationInput extends InputElement {
         return this.key;
     }
     setError(error, feedbackText) {
-        var _a;
         this.error = error;
         if (this.error)
             this.feedback.classList.replace('success', 'error');
         else
             this.feedback.classList.replace('error', 'success');
         this.feedback.innerText = feedbackText;
-        (_a = this.formOrSection) === null || _a === void 0 ? void 0 : _a.validate();
+        this.formOrSection?.validate();
     }
     getError() {
         return this.key != undefined ? this.error : false;
@@ -293,7 +297,10 @@ class OldPasswordForm extends StructuredForm {
         }, settingsStatusCode, 'authentication');
     }
     async getData() {
-        return JSON.stringify(Object.assign(Object.assign({}, await settingsForm.getData()), { oldPassword: await oldPasswordInput.parse() }));
+        return JSON.stringify({
+            ...await settingsForm.getData(),
+            oldPassword: await oldPasswordInput.parse()
+        });
     }
 }
 const oldPasswordForm = new OldPasswordForm();
