@@ -2,6 +2,7 @@
     --color-background: #222222;
     --color-lighter: #333333;
     --color-foreground: #DDDDDD;
+    --color-title: #FFFFFF;
     --color-error: #f54747;
     --color-critical: #f56747;
     --color-warning: #f3a43d;
@@ -108,6 +109,7 @@ span.title {
     font-size: 25px;
     line-height: 30px;
     letter-spacing: -1px;
+    color: var(--color-title);
 }
 span.shoppingsaver-color {
     color: var(--color-shoppingsaver);
