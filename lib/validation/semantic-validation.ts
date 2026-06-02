@@ -87,7 +87,7 @@ export function getProductName(raw: unknown): string {
 }
 
 export function getPrice(raw: unknown): Decimal {
-    if(typeof raw != 'string' || typeof raw != 'number')
+    if(typeof raw != 'string' && typeof raw != 'number')
         throw new BadRequest();
     try {
         const decimal = new Decimal(raw);

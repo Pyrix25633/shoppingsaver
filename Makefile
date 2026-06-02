@@ -26,6 +26,8 @@ generate-certificate:
 > mkdir -p ./certs
 > sudo cp /etc/letsencrypt/live/shoppingsaver.my.to/fullchain.pem ./certs/cert.pem
 > sudo cp /etc/letsencrypt/live/shoppingsaver.my.to/privkey.pem ./certs/key.pem
+> sudo cp ./certs/cert.pem /etc/nginx/certs/shoppingsaver/cert.pem
+> sudo cp ./certs/key.pem /etc/nginx/certs/shoppingsaver/key.pem
 > sudo systemctl start nginx
 > make forward-ports
 
