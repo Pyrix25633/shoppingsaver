@@ -4,8 +4,8 @@
   "description": "A Web Application that helps you remember where things cost less",
   "main": "main.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon"
+    "test": "nodemon",
+    "start": "ts-node main.ts"
   },
   "repository": {
     "type": "git",
@@ -44,9 +44,9 @@
     "https": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "node": "^20.18.0",
-    "nodemailer": "^6.9.15",
+    "nodemailer": "^8.0.10",
     "nodemon": "^3.1.7",
-    "npm": "^10.9.0",
+    "npm": "^11.16.0",
     "prisma": "^5.22.0",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0",

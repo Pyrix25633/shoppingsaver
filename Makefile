@@ -21,10 +21,12 @@ fix-mysql:
 
 generate-certificate:
 > sudo iptables -t nat -F
+> sudo systemctl stop nginx
 > sudo certbot certonly --standalone
 > mkdir -p ./certs
 > sudo cp /etc/letsencrypt/live/shoppingsaver.ddns.net/fullchain.pem ./certs/cert.pem
 > sudo cp /etc/letsencrypt/live/shoppingsaver.ddns.net/privkey.pem ./certs/key.pem
+> sudo systemctl start nginx
 > make forward-ports
 
 generate-selfsigned-certificate:
