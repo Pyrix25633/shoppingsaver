@@ -23,7 +23,7 @@ function authenticate(user: User, req: Request, res: Response): void {
     const authToken = jwt.sign(payload, settings.jwt.password, {
         algorithm: settings.jwt.algorithm as unknown as jwt.Algorithm,
         expiresIn: user.sessionDuration + 'd'
-    });
+    } as jwt.SignOptions);
     res.cookie(settings.jwt.cookieName, authToken, {
         expires: new Date(Date.now() + (user.sessionDuration * 24 * 60 * 60 * 1000)),
         sameSite: 'strict'
