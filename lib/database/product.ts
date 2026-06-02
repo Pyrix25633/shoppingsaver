@@ -1,9 +1,9 @@
-import { Product, UnitOfMeasurement } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Decimal } from '@prisma/client-runtime-utils';
 import { settings } from "../settings";
 import { Order, PriceVisibility, ProductFilter } from "../validation/semantic-validation";
 import { NotFound, UnprocessableContent } from "../web/response";
 import { prisma } from "./prisma";
+import { Product, UnitOfMeasurement } from "./prisma/client";
 
 const multiplier: number = 1000;
 

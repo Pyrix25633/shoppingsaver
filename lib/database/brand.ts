@@ -1,8 +1,8 @@
-import { Brand } from "@prisma/client";
 import { settings } from "../settings";
 import { Order } from "../validation/semantic-validation";
 import { NotFound, UnprocessableContent } from "../web/response";
 import { prisma } from "./prisma";
+import { Brand } from "./prisma/client";
 
 export async function isBrandNameInUse(userId: number, name: string): Promise<boolean> {
     return (await prisma.brand.count({

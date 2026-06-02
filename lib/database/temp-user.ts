@@ -1,8 +1,8 @@
-import { TempUser } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { settings } from "../settings";
 import { NotFound, UnprocessableContent } from "../web/response";
 import { prisma } from "./prisma";
+import { TempUser } from "./prisma/client";
 
 export async function isTempUserUsernameInUse(username: string): Promise<boolean> {
     return (await prisma.tempUser.count({

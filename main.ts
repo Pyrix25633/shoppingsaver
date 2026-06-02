@@ -21,6 +21,7 @@ const main: Express = express();
 const upgradeMain: Express = express();
 
 main.set('trust proxy', true);
+main.set('query parser', 'extended');
 main.use(cookieParser());
 main.use(bodyParser.urlencoded({ extended: true }));
 main.use(bodyParser.json({ limit: '6mb' }));
@@ -145,15 +146,15 @@ main.delete('/api/products/:productId', delProduct);
 
 if(settings.https.port != null) {
     const options = {
-        key: fs.readFileSync(path.resolve(__dirname, settings.https.key)),
-        cert: fs.readFileSync(path.resolve(__dirname, settings.https.cert)),
+        key: fs.readFileSync(path.resolve(settings.https.key)),
+        cert: fs.readFileSync(path.resolve(settings.https.cert)),
         passphrase: settings.https.passphrase
     };
     const server = https.createServer(options, main);
     server.listen(settings.https.port, (): void => {
         console.log('Server listening on Port ' + settings.https.port);
     });
-    upgradeMain.all('*', (req, res): void => {
+    upgradeMain.all('/{*any}', (req, res): void => {
         const port = settings.production ? '' : (':' + settings.https.port);
         res.redirect(301, 'https://' + req.hostname + port + req.url);
     });
@@ -172,75 +173,75 @@ else {
 // --pages-- //
 
 main.get('/register', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/register.html'));
+    res.sendFile(path.resolve('./pages/register.html'));
 });
 
 main.get('/terms-and-conditions', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/terms-and-conditions.html'));
+    res.sendFile(path.resolve('./pages/terms-and-conditions.html'));
 });
 
 main.get('/temp-users/:username/confirm', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/confirm.html'));
+    res.sendFile(path.resolve('./pages/confirm.html'));
 });
 main.get('/confirm', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/confirm.html'));
+    res.sendFile(path.resolve('./pages/confirm.html'));
 });
 
 main.get('/login', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/login.html'));
+    res.sendFile(path.resolve('./pages/login.html'));
 });
 
 main.get('/settings', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/settings.html'));
+    res.sendFile(path.resolve('./pages/settings.html'));
 });
 
 main.get('/', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/index.html'));
+    res.sendFile(path.resolve('./pages/index.html'));
 });
 
 main.get('/error', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/error.html'));
+    res.sendFile(path.resolve('./pages/error.html'));
 });
 
 main.get('/categories', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/categories.html'));
+    res.sendFile(path.resolve('./pages/categories.html'));
 });
 main.get('/categories/create', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/category-create.html'));
+    res.sendFile(path.resolve('./pages/category-create.html'));
 });
 main.get('/categories/:categoryId/edit', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/category-edit.html'));
+    res.sendFile(path.resolve('./pages/category-edit.html'));
 });
 
 main.get('/brands', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/brands.html'));
+    res.sendFile(path.resolve('./pages/brands.html'));
 });
 main.get('/brands/create', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/brand-create.html'));
+    res.sendFile(path.resolve('./pages/brand-create.html'));
 });
 main.get('/brands/:brandId/edit', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/brand-edit.html'));
+    res.sendFile(path.resolve('./pages/brand-edit.html'));
 });
 
 main.get('/supermarkets', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/supermarkets.html'));
+    res.sendFile(path.resolve('./pages/supermarkets.html'));
 });
 main.get('/supermarkets/create', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/supermarket-create.html'));
+    res.sendFile(path.resolve('./pages/supermarket-create.html'));
 });
 main.get('/supermarkets/:supermarketId/edit', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/supermarket-edit.html'));
+    res.sendFile(path.resolve('./pages/supermarket-edit.html'));
 });
 
 main.get('/products', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/products.html'));
+    res.sendFile(path.resolve('./pages/products.html'));
 });
 main.get('/products/create', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/product-create.html'));
+    res.sendFile(path.resolve('./pages/product-create.html'));
 });
 main.get('/products/:productId/edit', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/product-edit.html'));
+    res.sendFile(path.resolve('./pages/product-edit.html'));
 });
 main.get('/products/:productId/delete', (req: Request, res: Response): void => {
-    res.sendFile(path.resolve(__dirname, './pages/product-delete.html'));
+    res.sendFile(path.resolve('./pages/product-delete.html'));
 });

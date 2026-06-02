@@ -24,7 +24,7 @@ Frontend made with:
 3. Run `make setup`
 4. Edit `.env` to use Root User and execute `npx prisma db push`
 5. Copy and paste Commands contained in `prisma/dcl.sql` an run them as Root inside the MySql Terminal
-6. Edit `.env` to use to newly created user
+6. Edit `lib/settings.ts` to use to newly created User and Database
 7. Generate the SSL/TLS certificate with `make generate-certificate` or `make generate-selfsigned-certificate`
 9. Modify `lib/settings.ts` to match your Requirements
 

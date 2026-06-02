@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/database/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model TempUser {
+  username         String @id @db.VarChar(32)
+  email            String @unique @db.VarChar(64)
+  passwordHash     String @db.Char(60)
+  verificationCode Int
+}
+
+model User {
+  id              Int     @id @default(autoincrement())
+  username        String  @unique @db.VarChar(32)
+  email           String  @unique @db.VarChar(64)
+  customization   Json
+  passwordHash    String  @db.Char(60)
+  token           String  @db.Char(128)
+  sessionDuration Int     @default(14) @db.TinyInt
+  tfaKey          String? @db.Char(52)
+
+  categories   Category[]
+  brands       Brand[]
+  supermarkets Supermarket[]
+  products     Product[]
+}
+
+model Category {
+  id     Int    @id @default(autoincrement())
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int
+  name   String @db.VarChar(32)
+
+  products Product[]
+
+  @@unique([name, userId])
+}
+
+model Brand {
+  id       Int       @id @default(autoincrement())
+  user     User      @relation(fields: [userId], references: [id])
+  userId   Int
+  name     String    @db.VarChar(32)
+  products Product[]
+
+  @@unique([name, userId])
+}
+
+model Supermarket {
+  id       Int       @id @default(autoincrement())
+  user     User      @relation(fields: [userId], references: [id])
+  userId   Int
+  name     String    @db.VarChar(32)
+  products Product[]
+
+  @@unique([name, userId])
+}
+
+enum UnitOfMeasurement {
+  PIECES
+  GRAMS
+  MILLILITERS
+}
+
+model Product {
+  id                Int               @id @default(autoincrement())
+  user              User              @relation(fields: [userId], references: [id])
+  userId            Int
+  name              String            @db.VarChar(32)
+  category          Category          @relation(fields: [categoryId], references: [id])
+  categoryId        Int
+  brand             Brand             @relation(fields: [brandId], references: [id])
+  brandId           Int
+  quantity          Int               @db.UnsignedSmallInt
+  itemPrice         Decimal           @db.Decimal(4, 2)
+  unitOfMeasurement UnitOfMeasurement
+  price             Decimal           @db.Decimal(5, 2)
+  bestPrice         Boolean
+  supermarket       Supermarket       @relation(fields: [supermarketId], references: [id])
+  supermarketId     Int
+
+  @@unique([userId, name, brandId, supermarketId])
+}

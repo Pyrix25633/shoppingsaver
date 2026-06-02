@@ -1,4 +1,3 @@
-import { User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -12,6 +11,7 @@ import { settings } from "../settings";
 import { getSixDigitCode, getTfaKey, getToken, getUsername } from "../validation/semantic-validation";
 import { getNonEmptyString, getObject } from "../validation/type-validation";
 import { NoContent, NotFound, Ok, Unauthorized, UnprocessableContent, handleException } from "../web/response";
+import { User } from "./prisma/client";
 
 const pendingTfas: { [index: string]: number; } = {};
 

@@ -1,5 +1,5 @@
-import { UnitOfMeasurement } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Decimal } from '@prisma/client-runtime-utils';
+import { UnitOfMeasurement } from "../database/prisma/client";
 import { Customization } from "../database/user";
 import { BadRequest } from "../web/response";
 import { getArray, getBoolean, getInt, getNonEmptyString, getObject, getOrUndefined, getString } from "./type-validation";
