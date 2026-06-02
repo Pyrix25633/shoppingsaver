@@ -11,4 +11,4 @@ package-lock.json
 
 #env
 .env
-/lib/generated/prisma
+/lib/database/prisma
