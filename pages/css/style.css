@@ -197,3 +197,11 @@ div.panel {
         flex-direction: column;
     }
 }
+@media screen and (max-height: 600px) {
+    nav#navbar {
+        position: static;
+    }
+    div#footer {
+        position: static;
+    }
+}

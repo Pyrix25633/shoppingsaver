@@ -1,0 +1,30 @@
+@media screen and (max-width: 1430px) {
+    td, span.th {
+        font-size: medium;
+    }
+    thead div.container, tbody div.container {
+        gap: 5px;
+    }
+    table img.button {
+        height: 20px;
+    }
+    @media screen and (max-width: 800px) {
+        thead tr {
+            grid-template-columns: 1.6fr 1.7fr 1.2fr;
+        }
+        tbody tr {
+            grid-template-columns: 1fr 2.1fr 1.2fr;
+        }
+        @media screen and (max-width: 500px) {
+            td, span.th {
+                font-size: small;
+            }
+            table div.container {
+                gap: 3px;
+            }
+            table img.button {
+                height: 15px;
+            }
+        }
+    }
+}

@@ -6,6 +6,7 @@ thead {
 }
 tfoot {
     border-top: 2px solid var(--color-foreground);
+
 }
 tr:nth-child(even) td {
     background-color: var(--color-background);
@@ -23,7 +24,11 @@ td {
         display: flex;
         flex-direction: column;
     }
-    tr {
+    thead tr, tbody tr {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+    }
+    tfoot tr {
         display: grid;
     }
     tr:nth-child(even) {

@@ -21,7 +21,12 @@ tags:
     description: Handles user settings
   - name: categories
     description: Handles categories
-
+  - name: brands
+    description: Handles brands
+  - name: supermarkets
+    description: Handles supermarkets
+  - name: products
+    description: Handles products
 components:
   securitySchemes:
     cookieAuth:
@@ -102,12 +107,15 @@ components:
       enum:
         - PIECES
         - GRAMS
-        - MILLILITERS
-    date:
+        - MILLILITER
+    price:
+      type: number
+      example: 12.50
+      minimum: 0.01
+    decimal:
       type: string
-      example: '2024/12/04'
-      minLength: 8
-      maxLength: 10
+      format: decimal
+      example: "12.50"
     page:
       type: integer
       example: 2
@@ -132,6 +140,23 @@ components:
       items:
         type: object
         $ref: "#/components/schemas/orderValue"
+    filter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Hamb
+        categoryId:
+          $ref: "#/components/schemas/id"
+        supermarketId:
+          $ref: "#/components/schemas/id"
+        priceVisibility:
+          type: string
+          enum:
+            - ALL
+            - BEST
+      required:
+        - priceVisibility
 paths:
   /feedbacks/register-username:
     get:
@@ -1193,3 +1218,247 @@ paths:
           description: "Not Found: no supermarkets found with specified supermarketId"
         "422":
           description: "Unprocessable Content: supermarket cannot be updated"
+  /products:
+    get:
+      tags:
+        - products
+      summary: Gets products using a filter
+      description: Returns products owned by the user using a filter
+      operationId: products(get)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            $ref: "#/components/schemas/page"
+          required: false
+        - in: query
+          name: order
+          schema:
+            $ref: "#/components/schemas/order"
+          required: false
+          example:
+            - name: 'asc'
+            - defaultLocation:
+                name: 'desc'
+        - in: query
+          name: filter
+          schema:
+            $ref: "#/components/schemas/filter"
+          required: true
+      responses:
+        "200":
+          description: All filtered products of which the user is owner
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          $ref: "#/components/schemas/id"
+                        name:
+                          $ref: "#/components/schemas/name"
+                        category:
+                          type: object
+                          properties:
+                            name:
+                              $ref: "#/components/schemas/name"
+                        brand:
+                          type: object
+                          properties:
+                            name:
+                              $ref: "#/components/schemas/name"
+                        quantity:
+                          $ref: "#/components/schemas/quantity"
+                        itemPrice:
+                          $ref: "#/components/schemas/decimal"
+                        unitOfMeasurement:
+                          $ref: "#/components/schemas/unitOfMeasurement"
+                        price:
+                          $ref: "#/components/schemas/decimal"
+                        supermarket:
+                          type: object
+                          properties:
+                            name:
+                              $ref: "#/components/schemas/name"
+                  pages:
+                    $ref: "#/components/schemas/pages"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+    post:
+      tags:
+        - products
+      summary: Creates a new product
+      description: Creates a new product
+      operationId: products(post)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/name"
+                categoryId:
+                  $ref: "#/components/schemas/id"
+                brandId:
+                  $ref: "#/components/schemas/id"
+                quantity:
+                  $ref: "#/components/schemas/quantity"
+                itemPrice:
+                  $ref: "#/components/schemas/price"
+                unitOfMeasurement:
+                  $ref: "#/components/schemas/unitOfMeasurement"
+                supermarketId:
+                  $ref: "#/components/schemas/id"
+              required:
+                - name
+                - categoryId
+                - brandId
+                - quantity
+                - itemPrice
+                - unitOfMeasurement
+                - supermarketId
+      responses:
+        "201":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    $ref: "#/components/schemas/id"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "422":
+          description: "Unprocessable Content: product cannot be created"
+  /products/{productId}:
+    get:
+      tags:
+        - products
+      summary: Gets product
+      description: Returns most product attributes
+      operationId: products/[productId](get)
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            $ref: "#/components/schemas/id"
+          required: true
+      responses:
+        "200":
+          description: Most product attributes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    $ref: "#/components/schemas/name"
+                  categoryId:
+                    $ref: "#/components/schemas/id"
+                  brandId:
+                    $ref: "#/components/schemas/id"
+                  quantity:
+                    $ref: "#/components/schemas/quantity"
+                  itemPrice:
+                    $ref: "#/components/schemas/price"
+                  unitOfMeasurement:
+                    $ref: "#/components/schemas/unitOfMeasurement"
+                  supermarketId:
+                    $ref: "#/components/schemas/id"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: "Forbidden: requesting user does not own requested product"
+        "404":
+          description: "Not Found: no products found with specified productId"
+    patch:
+      tags:
+        - products
+      summary: Modifies the product
+      description: Updates the products's name and most of its attributes
+      operationId: products/[productId](patch)
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            $ref: "#/components/schemas/id"
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/name"
+                categoryId:
+                  $ref: "#/components/schemas/id"
+                brandId:
+                  $ref: "#/components/schemas/id"
+                quantity:
+                  $ref: "#/components/schemas/quantity"
+                itemPrice:
+                  $ref: "#/components/schemas/price"
+                unitOfMeasurement:
+                  $ref: "#/components/schemas/unitOfMeasurement"
+                supermarketId:
+                  $ref: "#/components/schemas/id"
+              required:
+                - name
+                - categoryId
+                - brandId
+                - quantity
+                - itemPrice
+                - unitOfMeasurement
+                - supermarketId
+      responses:
+        "204":
+          description: Product updated successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: "Forbidden: requesting user does not own requested product"
+        "404":
+          description: "Not Found: no products found with specified productId"
+        "422":
+          description: "Unprocessable Content: product cannot be updated"
+    delete:
+      tags:
+        - products
+      summary: Deletes product
+      description: Removes the product
+      operationId: products/[productId](delete)
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            $ref: "#/components/schemas/id"
+          required: true
+      responses:
+        "204":
+          description: Product deleted successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: "Forbidden: requesting user does not own requested product"
+        "404":
+          description: "Not Found: no products found with specified productId"
