@@ -4,8 +4,8 @@ import { findCategory } from "../database/category";
 import { prisma } from "../database/prisma";
 import { countProductPages, createProduct, deleteProduct, findProduct, findProducts, updateProduct } from "../database/product";
 import { findSupermarket } from "../database/supermarket";
-import { getOrder, getProductFilter, getProductName, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
-import { getDecimal, getInt, getObject, getOrUndefined } from "../validation/type-validation";
+import { getOrder, getPrice, getProductFilter, getProductName, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
+import { getInt, getObject, getOrUndefined } from "../validation/type-validation";
 import { Created, Forbidden, handleException, NoContent, Ok } from "../web/response";
 import { validateToken } from "./auth";
 
@@ -31,7 +31,7 @@ export async function postProduct(req: Request, res: Response): Promise<void> {
         const categoryId = getInt(body.categoryId);
         const brandId = getInt(body.brandId);
         const quantity = getQuantity(body.quantity);
-        const itemPrice = getDecimal(body.itemPrice);
+        const itemPrice = getPrice(body.itemPrice);
         const unitOfMeasurement = getUnitOfMeasurement(body.unitOfMeasurement);
         const supermarketId = getInt(body.supermarketId);
         const category = await findCategory(categoryId);
@@ -76,7 +76,7 @@ export async function patchProduct(req: Request, res: Response): Promise<void> {
         const categoryId = getInt(body.categoryId);
         const brandId = getInt(body.brandId);
         const quantity = getQuantity(body.quantity);
-        const itemPrice = getDecimal(body.itemPrice);
+        const itemPrice = getPrice(body.itemPrice);
         const unitOfMeasurement = getUnitOfMeasurement(body.unitOfMeasurement);
         const supermarketId = getInt(body.supermarketId);
         const category = await findCategory(categoryId);

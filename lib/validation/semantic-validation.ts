@@ -1,4 +1,5 @@
 import { UnitOfMeasurement } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 import { Customization } from "../database/user";
 import { BadRequest } from "../web/response";
 import { getArray, getBoolean, getInt, getNonEmptyString, getObject, getOrUndefined, getString } from "./type-validation";
@@ -20,80 +21,92 @@ const usernameRegex = /^(?:\w|-| ){3,32}$/;
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 const bulkSeparator = '~';
 
-export function getUsername(raw: any): string {
+export function getUsername(raw: unknown): string {
     const parsed = getString(raw);
     if(parsed.match(usernameRegex))
         return parsed;
     throw new BadRequest();
 }
 
-export function getEmail(raw: any): string {
+export function getEmail(raw: unknown): string {
     const parsed = getString(raw);
     if(parsed.match(emailRegex))
         return parsed;
     throw new BadRequest();
 }
 
-export function getSixDigitCode(raw: any): number {
+export function getSixDigitCode(raw: unknown): number {
     const parsed = getInt(raw);
     if(parsed < 100000 || parsed > 999999)
         throw new BadRequest();
     return parsed;
 }
 
-export function getToken(raw: any): string {
+export function getToken(raw: unknown): string {
     const parsed = getString(raw);
     if(parsed.length != 128)
         throw new BadRequest();
     return parsed;
 }
 
-export function getCustomization(raw: any): Customization {
-    if(typeof raw != 'object')
-        throw new BadRequest();
+export function getCustomization(raw: unknown): Customization {
+    const parsed = getObject(raw);
     return {
-        compactMode: getBoolean(raw.compactMode),
-        condensedFont: getBoolean(raw.condensedFont),
-        aurebeshFont: getBoolean(raw.aurebeshFont),
-        sharpMode: getBoolean(raw.sharpMode)
+        compactMode: getBoolean(parsed.compactMode),
+        condensedFont: getBoolean(parsed.condensedFont),
+        aurebeshFont: getBoolean(parsed.aurebeshFont),
+        sharpMode: getBoolean(parsed.sharpMode)
     };
 }
 
-export function getSessionDuration(raw: any): number {
+export function getSessionDuration(raw: unknown): number {
     const parsed = getInt(raw);
     if(parsed < 5 || parsed > 90)
         throw new BadRequest();
     return parsed;
 }
 
-export function getTfaKey(raw: any): string {
+export function getTfaKey(raw: unknown): string {
     const parsed = getString(raw);
     if(!parsed.match(/^\w{52}$/))
         throw new BadRequest();
     return parsed;
 }
 
-export function getName(raw: any): string {
+export function getName(raw: unknown): string {
     const parsed = getString(raw);
     if(parsed.length < 3 || parsed.length > 32)
         throw new BadRequest();
     return parsed;
 }
 
-export function getProductName(raw: any): string {
+export function getProductName(raw: unknown): string {
     const parsed = getName(raw);
     parsed.replace(/\s+/, ' ');
     return parsed.charAt(0).toUpperCase() + parsed.slice(1);
 }
 
-export function getQuantity(raw: any): number {
+export function getPrice(raw: unknown): Decimal {
+    if(typeof raw != 'string' || typeof raw != 'number')
+        throw new BadRequest();
+    try {
+        const decimal = new Decimal(raw);
+        if(!decimal.isFinite() || !decimal.isPos())
+            throw new BadRequest();
+        return decimal;
+    } catch(e: any) {
+        throw new BadRequest();
+    }
+}
+
+export function getQuantity(raw: unknown): number {
     const parsed = getInt(raw);
     if(parsed <= 0)
         throw new BadRequest();
     return parsed;
 }
 
-export function getUnitOfMeasurement(raw: any): UnitOfMeasurement {
+export function getUnitOfMeasurement(raw: unknown): UnitOfMeasurement {
     const parsed = getNonEmptyString(raw);
     for(const unitOfMeasurement of Object.values(UnitOfMeasurement)) {
         if(unitOfMeasurement == parsed)
@@ -102,7 +115,7 @@ export function getUnitOfMeasurement(raw: any): UnitOfMeasurement {
     throw new BadRequest();
 }
 
-export function getOrderValue(raw: any): OrderValue {
+export function getOrderValue(raw: unknown): OrderValue {
     const parsed: any = getObject(raw);
     const keys = Object.keys(parsed);
     if(keys.length != 1)
@@ -115,14 +128,14 @@ export function getOrderValue(raw: any): OrderValue {
     return parsed;
 }
 
-export function getOrder(raw: any): Order {
+export function getOrder(raw: unknown): Order {
     const parsed = getArray(raw);
     for(const value of parsed)
         getOrderValue(value);
     return parsed;
 }
 
-export function getPriceVisibility(raw: any): PriceVisibility {
+export function getPriceVisibility(raw: unknown): PriceVisibility {
     const parsed = getNonEmptyString(raw);
     for(const priceVisibility of Object.values(PriceVisibility)) {
         if(priceVisibility == parsed)
@@ -131,11 +144,19 @@ export function getPriceVisibility(raw: any): PriceVisibility {
     throw new BadRequest();
 }
 
-export function getProductFilter(raw: any): ProductFilter {
+export function getNameFilter(raw: unknown): string | undefined {
+    const parsed = getOrUndefined(raw, getString);
+    if(parsed == undefined)
+        return undefined;
+    return parsed.trim().replace(/\s+/, ' ');
+}
+
+export function getProductFilter(raw: unknown): ProductFilter {
     const parsed = getObject(raw);
-    parsed.categoryId = getOrUndefined(parsed.categoryId, getInt);
-    parsed.name = getOrUndefined(parsed.name, getString);
-    parsed.supermarketId = getOrUndefined(parsed.supermarketId, getInt);
-    parsed.priceVisibility = getPriceVisibility(parsed.priceVisibility);
-    return parsed as ProductFilter;
+    return {
+        categoryId: getOrUndefined(parsed.categoryId, getInt),
+        name: getNameFilter(parsed.name),
+        supermarketId: getOrUndefined(parsed.supermarketId, getInt),
+        priceVisibility: getPriceVisibility(parsed.priceVisibility)
+    };
 }

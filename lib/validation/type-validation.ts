@@ -1,34 +1,33 @@
-import { Decimal } from "@prisma/client/runtime/library";
 import { BadRequest } from "../web/response";
 
-export function getObject(raw: any): { [index: string]: any; } {
+export function getObject(raw: unknown): { [index: string]: any; } {
     if(raw == undefined || typeof raw != "object")
         throw new BadRequest();
     return raw;
 }
 
-export function getArray(raw: any): any[] {
+export function getArray(raw: unknown): any[] {
     if(raw == undefined || !Array.isArray(raw))
         throw new BadRequest();
     return raw;
 }
 
-export function getBoolean(raw: any): boolean {
+export function getBoolean(raw: unknown): boolean {
     if(raw == undefined || typeof raw != "boolean")
         throw new BadRequest();
     return raw;
 }
 
-function parseInt(raw: any): number {
+function parseInt(raw: unknown): number {
     const parsed = Number.parseInt(getNonEmptyString(raw));
     if(!Number.isSafeInteger(parsed))
         throw new BadRequest();
     return parsed;
 }
 
-export function getInt(raw: any): number {
+export function getInt(raw: unknown): number {
     if(typeof raw == "string")
-        raw = parseInt(raw);
+        return parseInt(raw);
     if(raw == undefined || typeof raw != "number")
         throw new BadRequest();
     if(!Number.isSafeInteger(raw))
@@ -36,30 +35,19 @@ export function getInt(raw: any): number {
     return raw;
 }
 
-export function getFloat(raw: any): number {
-    if(raw == undefined || typeof raw != "number")
+export function getFloat(raw: unknown): number {
+    if(raw == undefined || typeof raw != "number" || isNaN(raw))
         throw new BadRequest();
     return raw;
 }
 
-export function getDecimal(raw: any): Decimal {
-    try {
-        const decimal = new Decimal(raw);
-        if(!decimal.isFinite())
-            throw new BadRequest();
-        return decimal;
-    } catch(e: any) {
-        throw new BadRequest();
-    }
-}
-
-export function getString(raw: any): string {
+export function getString(raw: unknown): string {
     if(raw == undefined || typeof raw != "string")
         throw new BadRequest();
     return raw;
 }
 
-export function getNonEmptyString(raw: any): string {
+export function getNonEmptyString(raw: unknown): string {
     if(raw == undefined || typeof raw != "string")
         throw new BadRequest();
     if(raw.length == 0)
@@ -67,15 +55,15 @@ export function getNonEmptyString(raw: any): string {
     return raw;
 }
 
-type ParseFunction<R> = (raw: any) => R;
+type ParseFunction<R> = (raw: unknown) => R;
 
-export function getOrNull<T>(raw: any, parseFunction: ParseFunction<T>): T | null {
+export function getOrNull<T>(raw: unknown, parseFunction: ParseFunction<T>): T | null {
     if(raw === null)
         return null;
     return parseFunction(raw);
 }
 
-export function getOrUndefined<T>(raw: any, parseFunction: ParseFunction<T>): T | undefined {
+export function getOrUndefined<T>(raw: unknown, parseFunction: ParseFunction<T>): T | undefined {
     if(raw === undefined)
         return undefined;
     return parseFunction(raw);

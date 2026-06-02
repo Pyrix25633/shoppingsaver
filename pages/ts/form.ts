@@ -633,17 +633,14 @@ export class QuantityInput extends Input<number> {
     }
 
     async parse(): Promise<number | undefined> {
-        const quantity: number = parseInt(this.getInputValue());
+        const quantity: number = parseFloat(this.getInputValue());
         if(quantity == this.precompiledValue) {
             this.precompile(quantity);
             return quantity;
         }
-        if(isNaN(quantity)) {
-            this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a number!');
-            return undefined;
-        }
-        if(quantity <= 0) {
-            this.setError(true, this.feedbackText.replace('Input ', '') + ' must be a positive number!');
+        console.log(Number.isSafeInteger(quantity), quantity);
+        if(isNaN(quantity) || !Number.isSafeInteger(quantity) || quantity <= 0) {
+            this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a Quantity!');
             return undefined;
         }
         this.setError(false, 'Valid ' + this.feedbackText.replace('Input ', ''));
@@ -667,21 +664,17 @@ export class PriceInput extends Input<number> {
     }
 
     async parse(): Promise<number | undefined> {
-        const quantity: number = parseFloat(this.getInputValue());
-        if(quantity == this.precompiledValue) {
-            this.precompile(quantity);
-            return quantity;
+        const price: number = parseFloat(this.getInputValue());
+        if(price == this.precompiledValue) {
+            this.precompile(price);
+            return price;
         }
-        if(isNaN(quantity)) {
-            this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a number!');
-            return undefined;
-        }
-        if(quantity <= 0) {
-            this.setError(true, this.feedbackText.replace('Input ', '') + ' must be a positive number!');
+        if(isNaN(price) || price != Math.round(price * 100) / 100 || price <= 0) {
+            this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a Price!');
             return undefined;
         }
         this.setError(false, 'Valid ' + this.feedbackText.replace('Input ', ''));
-        return quantity;
+        return price;
     }
 
     set(value: number): void {

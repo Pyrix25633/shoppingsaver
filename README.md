@@ -21,7 +21,7 @@ Frontend made with:
 
 1. Install MySql Server
 2. Install npm (can be done using nvm)
-3. Run `npm i`
+3. Run `make setup`
 4. Edit `.env` to use Root User and execute `npx prisma db push`
 5. Copy and paste Commands contained in `prisma/dcl.sql` an run them as Root inside the MySql Terminal
 6. Edit `.env` to use to newly created user

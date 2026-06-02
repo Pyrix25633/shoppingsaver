@@ -8,6 +8,11 @@ almalinux:
 > systemctl is-active --quiet mysqld || systemctl start mysqld
 > npm start
 
+setup:
+> cp ./lib/template-settings.ts ./lib/settings.ts
+> cp ./.template-env ./.env
+> npm i
+
 compile-pages:
 > cd pages && npx tsc -w
 
@@ -17,6 +22,7 @@ fix-mysql:
 generate-certificate:
 > sudo iptables -t nat -F
 > sudo certbot certonly --standalone
+> mkdir -p ./certs
 > sudo cp /etc/letsencrypt/live/shoppingsaver.ddns.net/fullchain.pem ./certs/cert.pem
 > sudo cp /etc/letsencrypt/live/shoppingsaver.ddns.net/privkey.pem ./certs/key.pem
 > make forward-ports

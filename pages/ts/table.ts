@@ -336,7 +336,7 @@ export class QuantityTableData extends TableData<{ quantity: number; unitOfMeasu
         const td = super.createTd();
         if(this.value == null)
             throw new Error('Invalid Quantity!');
-        td.innerText = this.value.quantity.toString() + ' ';
+        td.innerText = this.value.quantity.toString();
         switch(this.value.unitOfMeasurement) {
             case UnitOfMeasurement.PIECES: td.innerText += 'pc' + (this.value.quantity != 1 ? 's' : ''); break;
             case UnitOfMeasurement.GRAMS: td.innerText += 'g'; break;
@@ -351,7 +351,7 @@ export class PriceTableData extends TableData<{ price: number; unitOfMeasurement
         const td = super.createTd();
         if(this.value == null)
             throw new Error('Invalid Quantity!');
-        td.innerText = this.value.price.toFixed(2) + ' €';
+        td.innerText = this.value.price.toFixed(2) + '€';
         if(this.value.unitOfMeasurement != undefined) {
             td.innerText += '/';
             switch(this.value.unitOfMeasurement) {
