@@ -1,3 +1,4 @@
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { RequireNonNull, showPage } from "./utils.js";
 
 const codeMessageHeading = RequireNonNull.getElementById('code-message') as HTMLHeadingElement;
@@ -9,4 +10,5 @@ const message = params.get('message');
 if(code != null && message != null)
     codeMessageHeading.innerText = code + ': ' + message;
 
+await loadCachedCustomization();
 showPage();

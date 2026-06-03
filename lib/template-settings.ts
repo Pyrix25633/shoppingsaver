@@ -20,14 +20,8 @@ export const settings = {
         algorithm: 'SHA512',
         window: 2
     },
-    nodemailerTransport: {
-        host: "smtp.zoho.eu",
-        port: 465,
-        secure: true,
-        auth: {
-            user: "simplychat@zohomail.eu",
-            pass: ""
-        }
+    sequenzy: {
+        apiKey: ""
     },
     database: {
         host: 'localhost',

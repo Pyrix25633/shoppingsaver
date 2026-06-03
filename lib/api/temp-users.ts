@@ -16,8 +16,12 @@ export async function postTempUser(req: Request, res: Response): Promise<void> {
         const password = getNonEmptyString(body.password);
         const verificationCode = generateVerificationCode();
         const tempUser = await createTempUser(username, email, password, verificationCode);
-        sendVerificationCode(email, tempUser);
-        new Created({username: tempUser.username}).send(res);
+        try {
+            await sendVerificationCode(email, tempUser);
+        } catch(e: any) {
+            throw e;
+        }
+        new Created({ username: tempUser.username }).send(res);
     } catch(e: any) {
         handleException(e, res);
     }

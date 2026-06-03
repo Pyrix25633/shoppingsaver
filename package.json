@@ -46,9 +46,9 @@
     "https": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "node": "^26.3.0",
-    "nodemailer": "^8.0.10",
     "npm": "^11.16.0",
     "qrcode": "^1.5.4",
+    "sequenzy": "^0.10.4",
     "speakeasy": "^2.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^6.0.3"
