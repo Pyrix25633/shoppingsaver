@@ -1,8 +1,8 @@
 import { ApiFeedbackInput, Button, StructuredForm } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { defaultStatusCode, Response, showPage } from "./utils.js";
 
-await loadCustomization();
+await loadCachedCustomization();
 
 const nameInput = new ApiFeedbackInput('name', 'text', 'Name:', 'Input Category Name', '/api/feedbacks/category-name');
 

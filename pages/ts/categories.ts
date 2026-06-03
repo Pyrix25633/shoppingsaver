@@ -1,9 +1,8 @@
 import { RedirectButton } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { IconLinkTableData, LinkTableHeader, StringTableData, Table, TableData, TableHeader, TableRow } from "./table.js";
-import { showPage } from "./utils.js";
 
-await loadCustomization();
+await loadCachedCustomization();
 
 type Category = {
     id: number;
@@ -36,5 +35,3 @@ const categoriesTable = new CategoriesTable();
 
 const createButton = new RedirectButton('Create Category', '/img/create.svg', '/categories/create');
 const backButton = new RedirectButton('Back', '/img/back.svg', '/');
-
-showPage();

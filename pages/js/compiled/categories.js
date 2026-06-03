@@ -1,8 +1,7 @@
 import { RedirectButton } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { IconLinkTableData, LinkTableHeader, StringTableData, Table, TableHeader, TableRow } from "./table.js";
-import { showPage } from "./utils.js";
-await loadCustomization();
+await loadCachedCustomization();
 class CategoriesTable extends Table {
     constructor() {
         super('/api/categories', 'categories', null, [
@@ -25,4 +24,3 @@ class CategoriesTableRow extends TableRow {
 const categoriesTable = new CategoriesTable();
 const createButton = new RedirectButton('Create Category', '/img/create.svg', '/categories/create');
 const backButton = new RedirectButton('Back', '/img/back.svg', '/');
-showPage();

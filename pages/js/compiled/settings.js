@@ -3,8 +3,8 @@ import { loadCustomization } from "./load-customization.js";
 import { CssManager, Customization, defaultStatusCode, showPage } from "./utils.js";
 await loadCustomization();
 const idInfoSpan = new InfoSpan('Id:');
-const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'You can change your Username', '/api/feedbacks/register-username');
-const emailInput = new ApiFeedbackInput('email', 'text', 'Email:', 'You can change your Email', '/api/feedbacks/register-email');
+const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'You can change your Username', '/api/feedbacks/register-username', true);
+const emailInput = new ApiFeedbackInput('email', 'text', 'Email:', 'You can change your Email', '/api/feedbacks/register-email', true);
 class InfoSection extends InputSection {
     constructor() {
         super('Info', [idInfoSpan, usernameInput, emailInput]);
@@ -267,6 +267,7 @@ class SettingsForm extends StructuredForm {
             },
             sessionDuration: await sessionDurationInput.parse()
         };
+        new Customization(data.customization).cache();
         if (passwordInput.changed()) {
             const password = await passwordInput.parse();
             if (password != undefined)

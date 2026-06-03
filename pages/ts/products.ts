@@ -1,9 +1,8 @@
 import { ApiDropdownInput, PriceVisibilityInput, RedirectButton, StringFilterInput, UnitOfMeasurement } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { FilteredTable, IconLinkTableData, LinkTableHeader, PriceTableData, QuantityTableData, StringTableData, TableData, TableHeader, TableRow } from "./table.js";
-import { showPage } from "./utils.js";
 
-await loadCustomization();
+await loadCachedCustomization();
 
 type Product = {
     id: number;
@@ -62,5 +61,3 @@ const productsTable = new CategoriesTable();
 
 const createButton = new RedirectButton('Create Product', '/img/create.svg', '/products/create');
 const backButton = new RedirectButton('Back', '/img/back.svg', '/');
-
-showPage();

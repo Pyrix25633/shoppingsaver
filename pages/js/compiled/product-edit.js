@@ -1,7 +1,7 @@
 import { ApiDropdownInput, ApiMultiFieldFeedbackInput, Button, PriceInput, QuantityInput, StructuredForm, UnitOfMeasurementInput } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { defaultStatusCode, getParameter, showPage } from "./utils.js";
-await loadCustomization();
+await loadCachedCustomization();
 const productId = getParameter(/^.+\/products\/(\d+)\/edit.*$/);
 function refresh() {
     if (nameInput.getInputValue() != '')

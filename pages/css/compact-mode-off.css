@@ -69,4 +69,7 @@ th, td {
     div.label-input {
         gap: 2px;
     }
+    div#footer {
+        gap: 30px;
+    }
 }

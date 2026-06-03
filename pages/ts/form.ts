@@ -720,12 +720,15 @@ export class ExpirationInput extends Input<string> {
 
 export class ApiFeedbackInput extends Input<string> {
     protected readonly url: string;
+    private readonly toBePrecompiled: boolean;
     private redirectPath: string | undefined;
     private redirectText: string | undefined;
 
-    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, redirectPath: string | undefined = undefined, redirectText: string | undefined = undefined) {
+    constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, toBePrecompiled: boolean = false,
+                redirectPath: string | undefined = undefined, redirectText: string | undefined = undefined) {
         super(id, type, labelText, feedbackText);
         this.url = url;
+        this.toBePrecompiled = toBePrecompiled;
         this.redirectPath = redirectPath;
         this.redirectText = redirectText;
     }
@@ -736,7 +739,9 @@ export class ApiFeedbackInput extends Input<string> {
     }
 
     async parse(): Promise<string | undefined> {
-        const value = this.getInputValue()
+        const value = this.getInputValue();
+        if(this.precompiledValue == undefined && this.toBePrecompiled)
+            return undefined;
         if(value == this.precompiledValue) {
             this.precompile(value);
             return value;
@@ -781,7 +786,7 @@ export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
     private readonly others: InputElement<any>[];
 
     constructor(id: string, type: string, labelText: string, feedbackText: string, url: string, others: InputElement<any>[], redirectPath: string | undefined = undefined, redirectText: string | undefined = undefined) {
-        super(id, type, labelText, feedbackText, url, redirectPath, redirectText);
+        super(id, type, labelText, feedbackText, url, true, redirectPath, redirectText);
         this.others = others;
     }
 

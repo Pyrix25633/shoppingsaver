@@ -1,5 +1,5 @@
 import { UnitOfMeasurement } from "./form.js";
-import { defaultStatusCode, RequireNonNull } from "./utils.js";
+import { defaultStatusCode, RequireNonNull, showPage } from "./utils.js";
 export class Table {
     url;
     resourceName;
@@ -118,6 +118,8 @@ export class Table {
                     const row = this.parseElement(element);
                     row.appendTo(this);
                 }
+                if (document.body.hidden == true)
+                    showPage();
             },
             statusCode: defaultStatusCode
         });
@@ -164,6 +166,8 @@ export class FilteredTable extends Table {
                     const row = this.parseElement(element);
                     row.appendTo(this);
                 }
+                if (document.body.hidden == true)
+                    showPage();
             },
             statusCode: defaultStatusCode
         });

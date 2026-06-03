@@ -626,11 +626,13 @@ export class ExpirationInput extends Input {
 }
 export class ApiFeedbackInput extends Input {
     url;
+    toBePrecompiled;
     redirectPath;
     redirectText;
-    constructor(id, type, labelText, feedbackText, url, redirectPath = undefined, redirectText = undefined) {
+    constructor(id, type, labelText, feedbackText, url, toBePrecompiled = false, redirectPath = undefined, redirectText = undefined) {
         super(id, type, labelText, feedbackText);
         this.url = url;
+        this.toBePrecompiled = toBePrecompiled;
         this.redirectPath = redirectPath;
         this.redirectText = redirectText;
     }
@@ -640,6 +642,8 @@ export class ApiFeedbackInput extends Input {
     }
     async parse() {
         const value = this.getInputValue();
+        if (this.precompiledValue == undefined && this.toBePrecompiled)
+            return undefined;
         if (value == this.precompiledValue) {
             this.precompile(value);
             return value;
@@ -681,7 +685,7 @@ export class ApiFeedbackInput extends Input {
 export class ApiMultiFieldFeedbackInput extends ApiFeedbackInput {
     others;
     constructor(id, type, labelText, feedbackText, url, others, redirectPath = undefined, redirectText = undefined) {
-        super(id, type, labelText, feedbackText, url, redirectPath, redirectText);
+        super(id, type, labelText, feedbackText, url, true, redirectPath, redirectText);
         this.others = others;
     }
     set(value) {

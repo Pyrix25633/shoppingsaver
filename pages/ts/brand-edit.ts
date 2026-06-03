@@ -1,8 +1,8 @@
 import { ApiFeedbackInput, Button, StructuredForm } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { Response, defaultStatusCode, getParameter, showPage } from "./utils.js";
 
-await loadCustomization();
+await loadCachedCustomization();
 
 const brandId = getParameter(/^.+\/brands\/(\d+)\/edit.*$/);
 

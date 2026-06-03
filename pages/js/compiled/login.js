@@ -1,4 +1,5 @@
 import { ApiFeedbackInput, Button, Form, Input, PasswordInput } from './form.js';
+import { loadCustomization } from './load-customization.js';
 import { defaultStatusCode, pendingActionKey, showPage } from './utils.js';
 const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'Input Username', '/api/feedbacks/login-username');
 const passwordInput = new PasswordInput();
@@ -10,8 +11,9 @@ loginStatusCode[404] = () => {
     passwordInput.setError(true, 'No Users found with specified Username!');
 };
 let loginResponse = undefined;
-function navigateToPendingActionOrIndex() {
+async function navigateToPendingActionOrIndex() {
     const pendingAction = localStorage.getItem(pendingActionKey);
+    await loadCustomization();
     if (pendingAction != null) {
         localStorage.removeItem(pendingActionKey);
         window.location.href = pendingAction;

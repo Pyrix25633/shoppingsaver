@@ -1,5 +1,11 @@
 import { CssManager, Customization } from "./utils.js";
 
-const cssManager = new CssManager();
+export async function loadCachedCustomization(): Promise<Customization> {
+    const cssManager = new CssManager();
 
-cssManager.applyStyle(Customization.loadCached());
+    const customization = Customization.loadCached();
+    
+    await cssManager.applyStyle(customization);
+    customization.cache();
+    return customization;
+}

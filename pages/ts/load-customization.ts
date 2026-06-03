@@ -7,7 +7,7 @@ export async function loadCustomization(): Promise<Customization> {
 
     const customization = await Customization.get();
     
-    cssManager.applyStyle(customization);
+    await cssManager.applyStyle(customization);
     customization.cache();
     return customization;
 }

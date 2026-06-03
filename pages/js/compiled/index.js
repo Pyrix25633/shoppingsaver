@@ -1,7 +1,7 @@
 import { RedirectButton } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
+import { loadCachedCustomization } from "./load-cached-customization.js";
 import { RequireNonNull, showPage } from "./utils.js";
-await loadCustomization();
+await loadCachedCustomization();
 const indexDiv = RequireNonNull.getElementById('index');
 const settingsButton = new RedirectButton('Settings', '/img/settings.svg', '/settings', false);
 settingsButton.appendTo(indexDiv);

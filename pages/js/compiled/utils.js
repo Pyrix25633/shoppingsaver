@@ -113,10 +113,22 @@ export class CssManager {
         this.sharpModeCssLink = RequireNonNull.getElementById('sharp-mode-css');
         this.fontCssLink = RequireNonNull.getElementById('font-css');
     }
-    applyStyle(customization) {
-        this.compactModeCssLink.href = CssManager.buildLink('compact-mode', customization.compactMode);
-        this.sharpModeCssLink.href = CssManager.buildLink('sharp-mode', customization.sharpMode);
-        this.fontCssLink.href = CssManager.buildLink((customization.aurebeshFont ? 'aurebesh' : 'roboto') + '-condensed', customization.condensedFont);
+    async applyStyle(customization) {
+        const compactMode = new Promise((resolve) => {
+            this.compactModeCssLink.href = CssManager.buildLink('compact-mode', customization.compactMode);
+            this.compactModeCssLink.onload = () => { resolve(); };
+        });
+        const sharpMode = new Promise((resolve) => {
+            this.sharpModeCssLink.href = CssManager.buildLink('sharp-mode', customization.sharpMode);
+            this.sharpModeCssLink.onload = () => { resolve(); };
+        });
+        const font = new Promise((resolve) => {
+            this.fontCssLink.href = CssManager.buildLink((customization.aurebeshFont ? 'aurebesh' : 'roboto') + '-condensed', customization.condensedFont);
+            this.fontCssLink.onload = () => { resolve(); };
+        });
+        await compactMode;
+        await sharpMode;
+        await font;
     }
     static buildLink(name, on) {
         return '/css/' + name + '-' + (on ? 'on' : 'off') + '.css';
@@ -131,7 +143,9 @@ export function getParameter(regExp) {
     return match[1];
 }
 export function showPage() {
-    setTimeout(() => {
-        document.body.hidden = false;
-    }, 50);
+    jQuery(() => {
+        setTimeout(() => {
+            document.body.hidden = false;
+        }, 20);
+    });
 }

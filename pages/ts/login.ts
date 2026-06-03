@@ -1,4 +1,5 @@
 import { ApiFeedbackInput, Button, Form, Input, PasswordInput } from './form.js';
+import { loadCustomization } from './load-customization.js';
 import { Response, defaultStatusCode, pendingActionKey, showPage } from './utils.js';
 
 const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'Input Username', '/api/feedbacks/login-username');
@@ -14,8 +15,9 @@ loginStatusCode[404] = (): void => {
 
 let loginResponse: Response | undefined = undefined;
 
-function navigateToPendingActionOrIndex(): void {
+async function navigateToPendingActionOrIndex(): Promise<void> {
     const pendingAction = localStorage.getItem(pendingActionKey);
+    await loadCustomization();
     if(pendingAction != null) {
         localStorage.removeItem(pendingActionKey);
         window.location.href = pendingAction;
