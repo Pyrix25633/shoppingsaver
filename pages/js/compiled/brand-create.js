@@ -1,7 +1,6 @@
 import { ApiFeedbackInput, Button, StructuredForm } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { defaultStatusCode, showPage } from "./utils.js";
-await loadCachedCustomization();
+import { defaultStatusCode, Loader } from "./utils.js";
+Loader.loadCachedCustomization();
 const nameInput = new ApiFeedbackInput('name', 'text', 'Name:', 'Input Brand Name', '/api/feedbacks/brand-name');
 class CreateBrandForm extends StructuredForm {
     constructor() {
@@ -13,4 +12,4 @@ class CreateBrandForm extends StructuredForm {
     }
 }
 const createBrandForm = new CreateBrandForm();
-showPage();
+Loader.showPage();

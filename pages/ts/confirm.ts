@@ -1,8 +1,7 @@
 import { ApiFeedbackInput, Button, Form, Input } from './form.js';
-import { loadCachedCustomization } from './load-cached-customization.js';
-import { defaultStatusCode, showPage } from './utils.js';
+import { defaultStatusCode, Loader } from './utils.js';
 
-await loadCachedCustomization();
+Loader.loadCachedCustomization();
 
 class VerificationCodeInput extends Input<number> {
     constructor() {
@@ -79,4 +78,4 @@ class ConfirmForm extends Form {
 
 const confirmForm = new ConfirmForm();
 
-showPage();
+Loader.showPage();

@@ -1,8 +1,8 @@
 import { ApiDropdownInput, PriceVisibilityInput, RedirectButton, StringFilterInput, UnitOfMeasurement } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
 import { FilteredTable, IconLinkTableData, LinkTableHeader, PriceTableData, QuantityTableData, StringTableData, TableData, TableHeader, TableRow } from "./table.js";
+import { Loader } from "./utils.js";
 
-await loadCachedCustomization();
+Loader.loadCachedCustomization();
 
 type Product = {
     id: number;

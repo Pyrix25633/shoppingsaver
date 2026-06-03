@@ -1,4 +1,3 @@
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { showPage } from "./utils.js";
-await loadCachedCustomization();
-showPage();
+import { Loader } from "./utils.js";
+Loader.loadCachedCustomization();
+Loader.showPage();

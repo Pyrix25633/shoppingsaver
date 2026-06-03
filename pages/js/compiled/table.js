@@ -1,5 +1,5 @@
 import { UnitOfMeasurement } from "./form.js";
-import { defaultStatusCode, RequireNonNull, showPage } from "./utils.js";
+import { defaultStatusCode, Loader, RequireNonNull } from "./utils.js";
 export class Table {
     url;
     resourceName;
@@ -119,7 +119,7 @@ export class Table {
                     row.appendTo(this);
                 }
                 if (document.body.hidden == true)
-                    showPage();
+                    Loader.showPage();
             },
             statusCode: defaultStatusCode
         });
@@ -167,7 +167,7 @@ export class FilteredTable extends Table {
                     row.appendTo(this);
                 }
                 if (document.body.hidden == true)
-                    showPage();
+                    Loader.showPage();
             },
             statusCode: defaultStatusCode
         });

@@ -1,8 +1,7 @@
 import { ApiFeedbackInput, Button, StructuredForm } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { defaultStatusCode, Response, showPage } from "./utils.js";
+import { defaultStatusCode, Loader, Response } from "./utils.js";
 
-await loadCachedCustomization();
+Loader.loadCachedCustomization();
 
 const nameInput = new ApiFeedbackInput('name', 'text', 'Name:', 'Input Category Name', '/api/feedbacks/category-name');
 
@@ -18,4 +17,4 @@ class CreateCategoryForm extends StructuredForm {
 
 const createCategoryForm = new CreateCategoryForm();
 
-showPage();
+Loader.showPage();

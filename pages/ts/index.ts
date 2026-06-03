@@ -1,8 +1,7 @@
 import { RedirectButton } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { RequireNonNull, showPage } from "./utils.js";
+import { Loader, RequireNonNull } from "./utils.js";
 
-await loadCachedCustomization();
+Loader.loadCachedCustomization();
 
 const indexDiv = RequireNonNull.getElementById('index');
 
@@ -17,4 +16,4 @@ supermarketsButton.appendTo(indexDiv);
 const productsButton = new RedirectButton('Products', '/img/products.svg', '/products', false);
 productsButton.appendTo(indexDiv);
 
-showPage();
+Loader.showPage();

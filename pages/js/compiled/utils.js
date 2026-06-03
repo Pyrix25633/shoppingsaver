@@ -115,16 +115,16 @@ export class CssManager {
     }
     async applyStyle(customization) {
         const compactMode = new Promise((resolve) => {
-            this.compactModeCssLink.href = CssManager.buildLink('compact-mode', customization.compactMode);
             this.compactModeCssLink.onload = () => { resolve(); };
+            this.compactModeCssLink.href = CssManager.buildLink('compact-mode', customization.compactMode);
         });
         const sharpMode = new Promise((resolve) => {
-            this.sharpModeCssLink.href = CssManager.buildLink('sharp-mode', customization.sharpMode);
             this.sharpModeCssLink.onload = () => { resolve(); };
+            this.sharpModeCssLink.href = CssManager.buildLink('sharp-mode', customization.sharpMode);
         });
         const font = new Promise((resolve) => {
-            this.fontCssLink.href = CssManager.buildLink((customization.aurebeshFont ? 'aurebesh' : 'roboto') + '-condensed', customization.condensedFont);
             this.fontCssLink.onload = () => { resolve(); };
+            this.fontCssLink.href = CssManager.buildLink((customization.aurebeshFont ? 'aurebesh' : 'roboto') + '-condensed', customization.condensedFont);
         });
         await compactMode;
         await sharpMode;
@@ -142,10 +142,34 @@ export function getParameter(regExp) {
     }
     return match[1];
 }
-export function showPage() {
-    jQuery(() => {
-        setTimeout(() => {
+export class Loader {
+    static cssLoader;
+    static loadCachedCustomization() {
+        this.cssLoader = new Promise(async (resolve) => {
+            const cssManager = new CssManager();
+            const customization = Customization.loadCached();
+            await cssManager.applyStyle(customization);
+            customization.cache();
+            resolve(customization);
+        });
+    }
+    static loadCustomization() {
+        this.cssLoader = new Promise(async (resolve) => {
+            const cssManager = new CssManager();
+            await Auth.validateToken();
+            const customization = await Customization.get();
+            await cssManager.applyStyle(customization);
+            customization.cache();
+            resolve(customization);
+        });
+    }
+    static async showPage() {
+        console.log(this.cssLoader);
+        if (this.cssLoader != undefined)
+            await this.cssLoader;
+        console.log(this.cssLoader);
+        jQuery(() => {
             document.body.hidden = false;
-        }, 20);
-    });
+        });
+    }
 }

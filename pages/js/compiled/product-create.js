@@ -1,7 +1,6 @@
 import { ApiDropdownInput, ApiMultiFieldFeedbackInput, Button, PriceInput, QuantityInput, StructuredForm, UnitOfMeasurementInput } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { defaultStatusCode, showPage } from "./utils.js";
-await loadCachedCustomization();
+import { defaultStatusCode, Loader } from "./utils.js";
+Loader.loadCachedCustomization();
 function refresh() {
     if (nameInput.getInputValue() != '')
         nameInput.parse();
@@ -29,4 +28,4 @@ class CreateProductForm extends StructuredForm {
     }
 }
 const createProductForm = new CreateProductForm();
-showPage();
+Loader.showPage();

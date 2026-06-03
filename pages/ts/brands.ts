@@ -1,8 +1,8 @@
 import { RedirectButton } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
 import { IconLinkTableData, LinkTableHeader, StringTableData, Table, TableData, TableHeader, TableRow } from "./table.js";
+import { Loader } from "./utils.js";
 
-await loadCachedCustomization();
+Loader.loadCachedCustomization();
 
 type Brand = {
     id: number;

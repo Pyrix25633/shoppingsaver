@@ -1,7 +1,6 @@
 import { ApiFeedbackInput, Button, Form, PasswordInput } from './form.js';
-import { loadCachedCustomization } from './load-cached-customization.js';
-import { defaultStatusCode, showPage } from './utils.js';
-await loadCachedCustomization();
+import { Loader, defaultStatusCode } from './utils.js';
+Loader.loadCachedCustomization();
 const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'Input Username', '/api/feedbacks/register-username');
 const emailInput = new ApiFeedbackInput('email', 'text', 'Email:', 'Input Email', '/api/feedbacks/register-email');
 const passwordInput = new PasswordInput();
@@ -17,4 +16,4 @@ class RegisterForm extends Form {
     }
 }
 const registerForm = new RegisterForm();
-showPage();
+Loader.showPage();

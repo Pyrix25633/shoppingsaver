@@ -1,8 +1,7 @@
 import { ApiFeedbackInput, Button, StructuredForm } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { Response, defaultStatusCode, getParameter, showPage } from "./utils.js";
+import { Loader, Response, defaultStatusCode, getParameter } from "./utils.js";
 
-await loadCachedCustomization();
+Loader.loadCachedCustomization();
 
 const categoryId = getParameter(/^.+\/categories\/(\d+)\/edit.*$/);
 
@@ -28,4 +27,4 @@ class EditCategoryForm extends StructuredForm {
 
 const editCategoryForm = new EditCategoryForm();
 
-showPage();
+Loader.showPage();

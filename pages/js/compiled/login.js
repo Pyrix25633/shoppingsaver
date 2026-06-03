@@ -1,7 +1,6 @@
 import { ApiFeedbackInput, Button, Form, Input, PasswordInput } from './form.js';
-import { loadCachedCustomization } from './load-cached-customization.js';
-import { Customization, defaultStatusCode, pendingActionKey, showPage } from './utils.js';
-await loadCachedCustomization();
+import { Customization, Loader, defaultStatusCode, pendingActionKey } from './utils.js';
+Loader.loadCachedCustomization();
 const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'Input Username', '/api/feedbacks/login-username');
 const passwordInput = new PasswordInput();
 const loginStatusCode = Object.assign({}, defaultStatusCode);
@@ -88,4 +87,4 @@ class LoginTfaForm extends Form {
 }
 const loginTfaForm = new LoginTfaForm();
 loginTfaForm.show(false);
-showPage();
+Loader.showPage();

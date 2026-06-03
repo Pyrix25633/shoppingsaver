@@ -1,7 +1,6 @@
 import { RedirectButton } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { RequireNonNull, showPage } from "./utils.js";
-await loadCachedCustomization();
+import { Loader, RequireNonNull } from "./utils.js";
+Loader.loadCachedCustomization();
 const indexDiv = RequireNonNull.getElementById('index');
 const settingsButton = new RedirectButton('Settings', '/img/settings.svg', '/settings', false);
 settingsButton.appendTo(indexDiv);
@@ -13,4 +12,4 @@ const supermarketsButton = new RedirectButton('Supermarkets', '/img/supermarkets
 supermarketsButton.appendTo(indexDiv);
 const productsButton = new RedirectButton('Products', '/img/products.svg', '/products', false);
 productsButton.appendTo(indexDiv);
-showPage();
+Loader.showPage();

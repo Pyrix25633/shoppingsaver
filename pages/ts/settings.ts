@@ -1,8 +1,7 @@
 import { ApiCallButton, ApiFeedbackInput, BooleanInput, Button, Form, InfoSpan, Input, InputElement, InputSection, PasswordInput, StructuredForm } from "./form.js";
-import { loadCustomization } from "./load-customization.js";
-import { CssManager, Customization, Response, defaultStatusCode, showPage } from "./utils.js";
+import { CssManager, Customization, Loader, Response, defaultStatusCode } from "./utils.js";
 
-await loadCustomization();
+Loader.loadCustomization();
 
 const idInfoSpan = new InfoSpan('Id:');
 const usernameInput = new ApiFeedbackInput('username', 'text', 'Username:', 'You can change your Username', '/api/feedbacks/register-username', true);
@@ -338,4 +337,4 @@ class OldPasswordForm extends StructuredForm {
 const oldPasswordForm = new OldPasswordForm();
 oldPasswordForm.show(false);
 
-showPage();
+Loader.showPage();

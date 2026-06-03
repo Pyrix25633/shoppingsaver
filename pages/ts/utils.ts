@@ -1,3 +1,4 @@
+
 export type Response = { [index: string]: any; };
 export type Success = (res: Response) => void;
 export type StatusCode = { [index: number]: (req: JQueryXHR, message: string, error: string) => void; };
@@ -134,16 +135,16 @@ export class CssManager {
 
     async applyStyle(customization: Customization): Promise<void> {
         const compactMode = new Promise<void>((resolve) => {
-            this.compactModeCssLink.href = CssManager.buildLink('compact-mode', customization.compactMode);
             this.compactModeCssLink.onload = () => {resolve();}
+            this.compactModeCssLink.href = CssManager.buildLink('compact-mode', customization.compactMode);
         });
         const sharpMode = new Promise<void>((resolve) => {
-            this.sharpModeCssLink.href = CssManager.buildLink('sharp-mode', customization.sharpMode);
             this.sharpModeCssLink.onload = () => {resolve();}
+            this.sharpModeCssLink.href = CssManager.buildLink('sharp-mode', customization.sharpMode);
         });
         const font = new Promise<void>((resolve) => {
-            this.fontCssLink.href = CssManager.buildLink((customization.aurebeshFont ? 'aurebesh' : 'roboto') + '-condensed', customization.condensedFont);
             this.fontCssLink.onload = () => {resolve();}
+            this.fontCssLink.href = CssManager.buildLink((customization.aurebeshFont ? 'aurebesh' : 'roboto') + '-condensed', customization.condensedFont);
         });
         await compactMode;
         await sharpMode;
@@ -164,10 +165,43 @@ export function getParameter(regExp: RegExp) {
     return match[1];
 }
 
-export function showPage() {
-    jQuery(() => {
-        setTimeout(() => {
+export class Loader {
+    private static cssLoader: Promise<Customization> | undefined;
+
+    public static loadCachedCustomization(): void {
+        this.cssLoader = new Promise<Customization>(async (resolve): Promise<void> => {
+            const cssManager = new CssManager();
+
+            const customization = Customization.loadCached();
+            
+            await cssManager.applyStyle(customization);
+            customization.cache();
+            resolve(customization);
+        });
+    }
+
+    public static loadCustomization(): void {
+        this.cssLoader = new Promise<Customization>(async (resolve): Promise<void> => {
+            const cssManager = new CssManager();
+
+            await Auth.validateToken();
+
+            const customization = await Customization.get();
+            
+            await cssManager.applyStyle(customization);
+
+            customization.cache();
+            resolve(customization);
+        });
+    }
+
+    public static async showPage(): Promise<void> {
+        console.log(this.cssLoader)
+        if(this.cssLoader != undefined)
+            await this.cssLoader;
+        console.log(this.cssLoader)
+        jQuery(() => {
             document.body.hidden = false;
-        }, 20);
-    })
+        });
+    }
 }

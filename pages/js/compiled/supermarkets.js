@@ -1,7 +1,7 @@
 import { RedirectButton } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
 import { IconLinkTableData, LinkTableHeader, StringTableData, Table, TableHeader, TableRow } from "./table.js";
-await loadCachedCustomization();
+import { Loader } from "./utils.js";
+Loader.loadCachedCustomization();
 class CategoriesTable extends Table {
     constructor() {
         super('/api/supermarkets', 'supermarkets', null, [

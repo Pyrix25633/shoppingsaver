@@ -1,7 +1,6 @@
 import { Button, StructuredForm } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { defaultStatusCode, getParameter, showPage } from "./utils.js";
-await loadCachedCustomization();
+import { Loader, defaultStatusCode, getParameter } from "./utils.js";
+Loader.loadCachedCustomization();
 const productId = getParameter(/^.+\/products\/(\d+)\/delete.*$/);
 class DeleteStockForm extends StructuredForm {
     constructor() {
@@ -14,4 +13,4 @@ class DeleteStockForm extends StructuredForm {
     }
 }
 const deleteStockForm = new DeleteStockForm();
-showPage();
+Loader.showPage();

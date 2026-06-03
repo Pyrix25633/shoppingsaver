@@ -1,7 +1,6 @@
 import { ApiDropdownInput, ApiMultiFieldFeedbackInput, Button, PriceInput, QuantityInput, StructuredForm, UnitOfMeasurementInput } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { defaultStatusCode, getParameter, showPage } from "./utils.js";
-await loadCachedCustomization();
+import { Loader, defaultStatusCode, getParameter } from "./utils.js";
+Loader.loadCachedCustomization();
 const productId = getParameter(/^.+\/products\/(\d+)\/edit.*$/);
 function refresh() {
     if (nameInput.getInputValue() != '')
@@ -42,4 +41,4 @@ class EditSupermarketForm extends StructuredForm {
     }
 }
 const editSupermarketForm = new EditSupermarketForm();
-showPage();
+Loader.showPage();

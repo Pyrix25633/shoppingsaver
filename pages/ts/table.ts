@@ -1,5 +1,5 @@
 import { FormAppender, InputElement, UnitOfMeasurement } from "./form.js";
-import { defaultStatusCode, RequireNonNull, showPage } from "./utils.js";
+import { defaultStatusCode, Loader, RequireNonNull } from "./utils.js";
 
 type BaseOrderValue = 'asc' | 'desc' | undefined;
 type OrderValue = { [index: string]: 'asc' | 'desc'; };
@@ -139,7 +139,7 @@ export abstract class Table {
                     row.appendTo(this);
                 }
                 if(document.body.hidden == true)
-                    showPage();
+                    Loader.showPage();
             },
             statusCode: defaultStatusCode
         });
@@ -198,7 +198,7 @@ export abstract class FilteredTable extends Table implements FormAppender {
                     row.appendTo(this);
                 }
                 if(document.body.hidden == true)
-                    showPage();
+                    Loader.showPage();
             },
             statusCode: defaultStatusCode
         });

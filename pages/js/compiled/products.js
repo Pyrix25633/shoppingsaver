@@ -1,7 +1,7 @@
 import { ApiDropdownInput, PriceVisibilityInput, RedirectButton, StringFilterInput } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
 import { FilteredTable, IconLinkTableData, LinkTableHeader, PriceTableData, QuantityTableData, StringTableData, TableHeader, TableRow } from "./table.js";
-await loadCachedCustomization();
+import { Loader } from "./utils.js";
+Loader.loadCachedCustomization();
 class CategoriesTable extends FilteredTable {
     constructor() {
         super('/api/products', 'products', null, [

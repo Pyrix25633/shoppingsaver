@@ -1,7 +1,6 @@
 import { ApiFeedbackInput, Button, StructuredForm } from "./form.js";
-import { loadCachedCustomization } from "./load-cached-customization.js";
-import { defaultStatusCode, getParameter, showPage } from "./utils.js";
-await loadCachedCustomization();
+import { Loader, defaultStatusCode, getParameter } from "./utils.js";
+Loader.loadCachedCustomization();
 const supermarketId = getParameter(/^.+\/supermarkets\/(\d+)\/edit.*$/);
 const nameInput = new ApiFeedbackInput('name', 'text', 'Name:', 'Input Supermarket Name', '/api/feedbacks/supermarket-name');
 class EditSupermarketForm extends StructuredForm {
@@ -20,4 +19,4 @@ class EditSupermarketForm extends StructuredForm {
     }
 }
 const editSupermarketForm = new EditSupermarketForm();
-showPage();
+Loader.showPage();
