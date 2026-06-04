@@ -10,7 +10,8 @@ import path from 'path';
 import { getTfaGenerateKey, getTfaValidateCode, getValidateToken, postLogin, postLoginTfa, postLogout, postRegenerateToken } from './lib/api/auth';
 import { getBrand, getBrands, patchBrand, postBrand } from './lib/api/brands';
 import { getCategories, getCategory, patchCategory, postCategory } from './lib/api/categories';
-import { getBrandNameFeedback, getCategoryNameFeedback, getConfirmUsernameFeedback, getLoginUsernameFeedback, getProductNameFeedback, getRegisterEmailFeedback, getRegisterUsernameFeedback, getSupermarketNameFeedback } from './lib/api/feedbacks';
+import { getBrandNameFeedback, getCategoryNameFeedback, getConfirmUsernameFeedback, getItemNameFeedback, getLoginUsernameFeedback, getProductNameFeedback, getRegisterEmailFeedback, getRegisterUsernameFeedback, getSupermarketNameFeedback } from './lib/api/feedbacks';
+import { deleteList, getList, postItem, postToggleItem } from './lib/api/list';
 import { delProduct, getProduct, getProducts, patchProduct, postProduct } from './lib/api/products';
 import { getSettings, getSettingsCustomization, getSettingsId, patchSettings } from './lib/api/settings';
 import { getSupermarket, getSupermarkets, patchSupermarket, postSupermarket } from './lib/api/supermarkets';
@@ -67,6 +68,8 @@ main.get('/api/feedbacks/brand-name', getBrandNameFeedback);
 main.get('/api/feedbacks/supermarket-name', getSupermarketNameFeedback);
 
 main.get('/api/feedbacks/product-name', getProductNameFeedback);
+
+main.get('/api/feedbacks/item-name', getItemNameFeedback);
 
 // temp-users //
 
@@ -141,6 +144,16 @@ main.get('/api/products/:productId', getProduct);
 main.patch('/api/products/:productId', patchProduct);
 
 main.delete('/api/products/:productId', delProduct);
+
+// list //
+
+main.get('/api/list', getList);
+
+main.post('/api/list', postItem);
+
+main.post('/api/list/:itemId/toggle', postToggleItem);
+
+main.delete('/api/list', deleteList);
 
 // --server-- //
 
@@ -244,4 +257,14 @@ main.get('/products/:productId/edit', (req: Request, res: Response): void => {
 });
 main.get('/products/:productId/delete', (req: Request, res: Response): void => {
     res.sendFile(path.resolve('./pages/product-delete.html'));
+});
+
+main.get('/list', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve('./pages/list.html'));
+});
+main.get('/list/add', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve('./pages/item-add.html'));
+});
+main.get('/list/delete', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve('./pages/list-delete.html'));
 });

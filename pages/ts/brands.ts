@@ -9,7 +9,7 @@ type Brand = {
     name: string;
 };
 
-class CategoriesTable extends Table {
+class BrandsTable extends Table {
     public constructor() {
         super('/api/brands', 'brands', null, [
             new TableHeader('Name', 'name'),
@@ -18,11 +18,11 @@ class CategoriesTable extends Table {
     }
 
     public parseElement(element: Brand): TableRow {
-        return new CategoriesTableRow(element);
+        return new BrandsTableRow(element);
     }
 }
 
-class CategoriesTableRow extends TableRow {
+class BrandsTableRow extends TableRow {
     public parseData(element: Brand): TableData<any>[] {
         return [
             new StringTableData(element.name),
@@ -31,7 +31,7 @@ class CategoriesTableRow extends TableRow {
     }
 }
 
-const brandsTable = new CategoriesTable();
+const brandsTable = new BrandsTable();
 
 const createButton = new RedirectButton('Create Brand', '/img/create.svg', '/brands/create');
 const backButton = new RedirectButton('Back', '/img/back.svg', '/');

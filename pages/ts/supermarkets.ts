@@ -9,7 +9,7 @@ type Supermarket = {
     name: string;
 };
 
-class CategoriesTable extends Table {
+class SupermarketsTable extends Table {
     public constructor() {
         super('/api/supermarkets', 'supermarkets', null, [
             new TableHeader('Name', 'name'),
@@ -18,11 +18,11 @@ class CategoriesTable extends Table {
     }
 
     public parseElement(element: Supermarket): TableRow {
-        return new CategoriesTableRow(element);
+        return new SupermarketsTableRow(element);
     }
 }
 
-class CategoriesTableRow extends TableRow {
+class SupermarketsTableRow extends TableRow {
     public parseData(element: Supermarket): TableData<any>[] {
         return [
             new StringTableData(element.name),
@@ -31,7 +31,7 @@ class CategoriesTableRow extends TableRow {
     }
 }
 
-const supermarketsTable = new CategoriesTable();
+const supermarketsTable = new SupermarketsTable();
 
 const createButton = new RedirectButton('Create Supermarket', '/img/create.svg', '/supermarkets/create');
 const backButton = new RedirectButton('Back', '/img/back.svg', '/');

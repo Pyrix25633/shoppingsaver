@@ -2,7 +2,7 @@ import { RedirectButton } from "./form.js";
 import { IconLinkTableData, LinkTableHeader, StringTableData, Table, TableHeader, TableRow } from "./table.js";
 import { Loader } from "./utils.js";
 Loader.loadCachedCustomization();
-class CategoriesTable extends Table {
+class SupermarketsTable extends Table {
     constructor() {
         super('/api/supermarkets', 'supermarkets', null, [
             new TableHeader('Name', 'name'),
@@ -10,10 +10,10 @@ class CategoriesTable extends Table {
         ]);
     }
     parseElement(element) {
-        return new CategoriesTableRow(element);
+        return new SupermarketsTableRow(element);
     }
 }
-class CategoriesTableRow extends TableRow {
+class SupermarketsTableRow extends TableRow {
     parseData(element) {
         return [
             new StringTableData(element.name),
@@ -21,6 +21,6 @@ class CategoriesTableRow extends TableRow {
         ];
     }
 }
-const supermarketsTable = new CategoriesTable();
+const supermarketsTable = new SupermarketsTable();
 const createButton = new RedirectButton('Create Supermarket', '/img/create.svg', '/supermarkets/create');
 const backButton = new RedirectButton('Back', '/img/back.svg', '/');

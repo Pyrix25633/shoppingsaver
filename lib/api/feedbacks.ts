@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { isBrandNameInUse } from "../database/brand";
 import { isCategoryNameInUse } from "../database/category";
-import { findProductFromName, isProductNameInUse } from "../database/product";
+import { isItemNameInUse } from "../database/item";
+import { findProductFromName, findProductFromNameBrandSupermarket, isProductNameInUse } from "../database/product";
 import { isSupermarketNameInUse } from "../database/supermarket";
 import { isTempUserEmailInUse, isTempUserUsernameInUse } from "../database/temp-user";
 import { isUserEmailInUse, isUserUsernameInUse } from "../database/user";
@@ -153,11 +154,37 @@ export async function getProductNameFeedback(req: Request, res: Response): Promi
             const supermarketId = getInt(req.query.supermarketId);
             const inUse = await isProductNameInUse(user.id, name);
             if(inUse) {
-                const product = await findProductFromName(user.id, name, brandId, supermarketId);
+                const product = await findProductFromNameBrandSupermarket(user.id, name, brandId, supermarketId);
                 feedback = product == null ? 'Other products with the same name' : 'Product already exists! {productId}:' + product.id;
             }
             else
                 feedback = 'Valid Name';
+        } catch(e: any) {
+            const name = getString(req.query.name);
+            if(name.length < 3)
+                feedback = 'Name too short!';
+            else
+                feedback = 'Name too long!';
+        }
+        new Ok({feedback: feedback}).send(res);
+    } catch(e: any) {
+        handleException(e, res);
+    }
+}
+
+export async function getItemNameFeedback(req: Request, res: Response): Promise<void> {
+    try {
+        const user = await validateToken(req);
+        let feedback: string;
+        try {
+            const name = getName(req.query.name);
+            const inUse = await isItemNameInUse(user.id, name);
+            if(!inUse) {
+                const product = await findProductFromName(user.id, name);
+                feedback = product == null ? 'Valid Name' : 'Products with the same Name';
+            }
+            else
+                feedback = 'Name already used!';
         } catch(e: any) {
             const name = getString(req.query.name);
             if(name.length < 3)

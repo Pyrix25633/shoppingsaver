@@ -28,6 +28,7 @@ model User {
   brands          Brand[]
   supermarkets    Supermarket[]
   products        Product[]
+  list            Item[]
 }
 
 model Category {
@@ -85,4 +86,12 @@ model Product {
   supermarketId     Int
 
   @@unique([userId, name, brandId, supermarketId])
+}
+
+model Item {
+  id      Int     @id @default(autoincrement())
+  user    User    @relation(fields: [userId], references: [id])
+  userId  Int
+  name    String  @unique
+  checked Boolean @default(false)
 }

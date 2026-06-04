@@ -23,7 +23,16 @@ export async function isProductNameInUse(userId: number, name: string): Promise<
     })) != 0;
 }
 
-export async function findProductFromName(userId: number, name: string, brandId: number, supermarketId: number): Promise<Product | null> {
+export async function findProductFromName(userId: number, name: string): Promise<Product | null> {
+    return await prisma.product.findFirst({
+        where: {
+            userId: userId,
+            name: name
+        }
+    });
+}
+
+export async function findProductFromNameBrandSupermarket(userId: number, name: string, brandId: number, supermarketId: number): Promise<Product | null> {
     return await prisma.product.findFirst({
         where: {
             userId: userId,

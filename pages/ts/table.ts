@@ -35,7 +35,12 @@ export abstract class Table {
         head.appendChild(this.headersRow);
         this.headers = headers;
         this.order = [];
-        this.addToOrder({ [headers[0].column]: 'asc' }, false);
+        for(const h of headers) {
+            if(h.column != '') {
+                this.addToOrder({ [h.column]: 'asc' }, false);
+                break;
+            }
+        }
         for(const header of headers)
             header.appendTo(this);
         this.groups = groups;
@@ -406,6 +411,47 @@ export class IconLinkTableData extends TableData<number> {
         img.src = this.src;
         img.addEventListener('click', () => {
             window.location.href = this.href.replace('{id}', this.value?.toString() ?? '');
+        });
+        div.appendChild(img);
+        td.appendChild(div);
+        return td;
+    }
+}
+
+export class IconToggleTableData extends TableData<number> {
+    private readonly toggleValue: boolean;
+    private readonly url: string;
+    private readonly table: Table;
+    private readonly srcFalse: string;
+    private readonly srcTrue: string;
+
+    constructor(value: number, toggleValue: boolean, url: string, table: Table, srcFalse: string, srcTrue: string) {
+        super(value);
+        this.toggleValue = toggleValue;
+        this.url = url;
+        this.table = table;
+        this.srcFalse = srcFalse;
+        this.srcTrue = srcTrue;
+    }
+
+    public createTd(): HTMLTableCellElement {
+        const td = document.createElement('td');
+        const div = document.createElement('div');
+        div.classList.add('container');
+        const img = document.createElement('img');
+        img.classList.add('button');
+        img.alt = 'Toggle Icon';
+        img.src = this.toggleValue ? this.srcTrue : this.srcFalse;
+        img.addEventListener('click', (): void => {
+            $.ajax({
+                url: this.url.replace('{id}', this.value?.toString() ?? ''),
+                method: 'POST',
+                contentType: 'application/json',
+                success: (): void => {
+                    this.table.update();
+                },
+                statusCode: defaultStatusCode
+            });
         });
         div.appendChild(img);
         td.appendChild(div);

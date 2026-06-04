@@ -28,7 +28,12 @@ export class Table {
         head.appendChild(this.headersRow);
         this.headers = headers;
         this.order = [];
-        this.addToOrder({ [headers[0].column]: 'asc' }, false);
+        for (const h of headers) {
+            if (h.column != '') {
+                this.addToOrder({ [h.column]: 'asc' }, false);
+                break;
+            }
+        }
         for (const header of headers)
             header.appendTo(this);
         this.groups = groups;
@@ -357,6 +362,44 @@ export class IconLinkTableData extends TableData {
         img.src = this.src;
         img.addEventListener('click', () => {
             window.location.href = this.href.replace('{id}', this.value?.toString() ?? '');
+        });
+        div.appendChild(img);
+        td.appendChild(div);
+        return td;
+    }
+}
+export class IconToggleTableData extends TableData {
+    toggleValue;
+    url;
+    table;
+    srcFalse;
+    srcTrue;
+    constructor(value, toggleValue, url, table, srcFalse, srcTrue) {
+        super(value);
+        this.toggleValue = toggleValue;
+        this.url = url;
+        this.table = table;
+        this.srcFalse = srcFalse;
+        this.srcTrue = srcTrue;
+    }
+    createTd() {
+        const td = document.createElement('td');
+        const div = document.createElement('div');
+        div.classList.add('container');
+        const img = document.createElement('img');
+        img.classList.add('button');
+        img.alt = 'Toggle Icon';
+        img.src = this.toggleValue ? this.srcTrue : this.srcFalse;
+        img.addEventListener('click', () => {
+            $.ajax({
+                url: this.url.replace('{id}', this.value?.toString() ?? ''),
+                method: 'POST',
+                contentType: 'application/json',
+                success: () => {
+                    this.table.update();
+                },
+                statusCode: defaultStatusCode
+            });
         });
         div.appendChild(img);
         td.appendChild(div);
