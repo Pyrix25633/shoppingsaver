@@ -42,6 +42,18 @@ export async function findList(userId: number, page: number | undefined, order: 
     });
 }
 
+export async function findUncheckedNames(userId: number): Promise<string[]> {
+    return (await prisma.item.findMany({
+        select: {
+            name: true
+        },
+        where: {
+            userId: userId,
+            checked: false
+        }
+    })).map((e: { name: string; }): string => {return e.name});
+}
+
 export async function countListPages(userId: number): Promise<number> {
     return Math.ceil(await prisma.item.count({
         where: {

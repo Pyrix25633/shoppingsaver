@@ -10,9 +10,14 @@ export enum PriceVisibility {
     ALL = 'ALL',
     BEST = 'BEST'
 }
+export enum ProductVisibility {
+    ALL = 'ALL',
+    LIST = 'LIST'
+}
 export type ProductFilter = {
     categoryId: number | undefined;
     name: string | undefined;
+    productVisibility: ProductVisibility;
     supermarketId: number | undefined;
     priceVisibility: PriceVisibility;
 }
@@ -146,6 +151,15 @@ export function getPriceVisibility(raw: unknown): PriceVisibility {
     throw new BadRequest();
 }
 
+export function getProductVisibility(raw: unknown): ProductVisibility {
+    const parsed = getNonEmptyString(raw);
+    for(const productVisibility of Object.values(ProductVisibility)) {
+        if(productVisibility == parsed)
+            return productVisibility;
+    }
+    throw new BadRequest();
+}
+
 export function getNameFilter(raw: unknown): string | undefined {
     const parsed = getOrUndefined(raw, getString);
     if(parsed == undefined)
@@ -158,6 +172,7 @@ export function getProductFilter(raw: unknown): ProductFilter {
     return {
         categoryId: getOrUndefined(parsed.categoryId, getInt),
         name: getNameFilter(parsed.name),
+        productVisibility: getProductVisibility(parsed.productVisibility),
         supermarketId: getOrUndefined(parsed.supermarketId, getInt),
         priceVisibility: getPriceVisibility(parsed.priceVisibility)
     };

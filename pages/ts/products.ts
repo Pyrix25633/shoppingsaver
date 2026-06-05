@@ -1,4 +1,4 @@
-import { ApiDropdownInput, PriceVisibilityInput, RedirectButton, StringFilterInput, UnitOfMeasurement } from "./form.js";
+import { ApiDropdownInput, PriceVisibilityInput, ProductVisibilityInput, RedirectButton, StringFilterInput, UnitOfMeasurement } from "./form.js";
 import { FilteredTable, IconLinkTableData, LinkTableHeader, PriceTableData, QuantityTableData, StringTableData, TableData, TableHeader, TableRow } from "./table.js";
 import { Loader } from "./utils.js";
 
@@ -30,6 +30,7 @@ class CategoriesTable extends FilteredTable {
             new LinkTableHeader('Delete'),
         ], [
             new ApiDropdownInput('categoryId', 'Category:', '/api/categories', () => {}, true),
+            new ProductVisibilityInput('productVisibility', 'Products:'),
             new StringFilterInput('name', 'Name:'),
             new ApiDropdownInput('supermarketId', 'Supermarket:', '/api/supermarkets', () => {}, true),
             new PriceVisibilityInput('priceVisibility', 'Price:')

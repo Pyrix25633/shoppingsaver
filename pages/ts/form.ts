@@ -928,9 +928,33 @@ export class UnitOfMeasurementInput extends DropdownInput<UnitOfMeasurement> {
     }
 }
 
+export enum ProductVisibility {
+    ALL = 'ALL',
+    LIST = 'LIST'
+}
+
 export enum PriceVisibility {
     ALL = 'ALL',
     BEST = 'BEST'
+}
+
+export class ProductVisibilityInput extends DropdownInput<ProductVisibility> {
+    constructor(id: string, labelText: string) {
+        super(id, labelText, (): void => {});
+        this.addOption(ProductVisibility.ALL, 'All');
+        this.addOption(ProductVisibility.LIST, 'List');
+        const last: string | null = localStorage.getItem(this.id + '-select');
+        if(last != null)
+            this.precompile(this.parseValue(last));
+    }
+
+    parseValue(value: string): ProductVisibility {
+        for(const priceVisibility of Object.values(ProductVisibility)) {
+            if(priceVisibility == value)
+                return priceVisibility;
+        }
+        return ProductVisibility.ALL;
+    }
 }
 
 export class PriceVisibilityInput extends DropdownInput<PriceVisibility> {

@@ -811,11 +811,33 @@ export class UnitOfMeasurementInput extends DropdownInput {
         return UnitOfMeasurement.PIECES;
     }
 }
+export var ProductVisibility;
+(function (ProductVisibility) {
+    ProductVisibility["ALL"] = "ALL";
+    ProductVisibility["LIST"] = "LIST";
+})(ProductVisibility || (ProductVisibility = {}));
 export var PriceVisibility;
 (function (PriceVisibility) {
     PriceVisibility["ALL"] = "ALL";
     PriceVisibility["BEST"] = "BEST";
 })(PriceVisibility || (PriceVisibility = {}));
+export class ProductVisibilityInput extends DropdownInput {
+    constructor(id, labelText) {
+        super(id, labelText, () => { });
+        this.addOption(ProductVisibility.ALL, 'All');
+        this.addOption(ProductVisibility.LIST, 'List');
+        const last = localStorage.getItem(this.id + '-select');
+        if (last != null)
+            this.precompile(this.parseValue(last));
+    }
+    parseValue(value) {
+        for (const priceVisibility of Object.values(ProductVisibility)) {
+            if (priceVisibility == value)
+                return priceVisibility;
+        }
+        return ProductVisibility.ALL;
+    }
+}
 export class PriceVisibilityInput extends DropdownInput {
     constructor(id, labelText) {
         super(id, labelText, () => { });

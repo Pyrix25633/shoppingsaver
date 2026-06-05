@@ -1,7 +1,8 @@
 import { Decimal } from '@prisma/client-runtime-utils';
 import { settings } from "../settings";
-import { Order, PriceVisibility, ProductFilter } from "../validation/semantic-validation";
+import { Order, PriceVisibility, ProductFilter, ProductVisibility } from "../validation/semantic-validation";
 import { NotFound, UnprocessableContent } from "../web/response";
+import { findUncheckedNames } from './item';
 import { prisma } from "./prisma";
 import { Product, UnitOfMeasurement } from "./prisma/client";
 
@@ -129,7 +130,8 @@ export async function findProducts(userId: number, page: number | undefined, ord
             userId: userId,
             categoryId: filter.categoryId,
             name: {
-                contains: filter.name
+                contains: filter.name,
+                in: filter.productVisibility == ProductVisibility.LIST ? await findUncheckedNames(userId) : undefined
             },
             supermarketId: filter.supermarketId,
             bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
@@ -146,7 +148,8 @@ export async function countProductPages(userId: number, filter: ProductFilter): 
             userId: userId,
             categoryId: filter.categoryId,
             name: {
-                contains: filter.name
+                contains: filter.name,
+                in: filter.productVisibility == ProductVisibility.LIST ? await findUncheckedNames(userId) : undefined
             },
             supermarketId: filter.supermarketId,
             bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
