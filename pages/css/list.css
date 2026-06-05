@@ -1,0 +1,5 @@
+@media screen and (max-width: 800px) {
+    thead tr, tbody tr {
+        grid-template-columns: 1fr 2fr;
+    }
+}
