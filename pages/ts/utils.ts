@@ -196,10 +196,8 @@ export class Loader {
     }
 
     public static async showPage(): Promise<void> {
-        console.log(this.cssLoader)
         if(this.cssLoader != undefined)
             await this.cssLoader;
-        console.log(this.cssLoader)
         jQuery(() => {
             document.body.hidden = false;
         });

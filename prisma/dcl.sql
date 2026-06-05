@@ -8,3 +8,4 @@ GRANT SELECT, INSERT, UPDATE ON Category TO 'shoppingsaver'@'localhost';
 GRANT SELECT, INSERT, UPDATE ON Brand TO 'shoppingsaver'@'localhost';
 GRANT SELECT, INSERT, UPDATE ON Supermarket TO 'shoppingsaver'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON Product TO 'shoppingsaver'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON Item TO 'shoppingsaver'@'localhost';
