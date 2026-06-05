@@ -27,6 +27,8 @@ tags:
     description: Handles supermarkets
   - name: products
     description: Handles products
+  - name: list
+    description: Handles items in a shopping list
 components:
   securitySchemes:
     cookieAuth:
@@ -146,6 +148,11 @@ components:
         name:
           type: string
           example: Hamb
+        productVisibility:
+          type: string
+          enum:
+            - ALL
+            - LIST
         categoryId:
           $ref: "#/components/schemas/id"
         supermarketId:
@@ -156,6 +163,7 @@ components:
             - ALL
             - BEST
       required:
+        - productVisibility
         - priceVisibility
 paths:
   /feedbacks/register-username:
@@ -380,6 +388,33 @@ paths:
                   feedback:
                     type: string
                     example: Valid Name
+        "400":
+          description: Bad Request
+  /feedbacks/item-name:
+    get:
+      tags:
+        - feedbacks
+      summary: Item's name feedback for the item's creation form
+      description: Returns a user friendly item's name feedback
+      operationId: feedbacks/item-name
+      parameters:
+        - in: query
+          name: name
+          schema:
+            $ref: "#/components/schemas/name"
+          description: The item's name
+          required: true
+      responses:
+        "200":
+          description: Item's name feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: string
+                    example: Products with the same Name
         "400":
           description: Bad Request
   /temp-users:
@@ -764,8 +799,6 @@ paths:
           required: false
           example:
             - name: 'asc'
-            - defaultLocation:
-                name: 'desc'
       responses:
         "200":
           description: All categories of which the user is owner
@@ -783,11 +816,6 @@ paths:
                           $ref: "#/components/schemas/id"
                         name:
                           $ref: "#/components/schemas/name"
-                        defaultLocation:
-                          type: object
-                          properties:
-                            name:
-                              $ref: "#/components/schemas/name"
                   pages:
                     $ref: "#/components/schemas/pages"
         "400":
@@ -809,11 +837,8 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/name"
-                defaultLocationId:
-                  $ref: "#/components/schemas/id"
               required:
                 - name
-                - defaultLocationId
       responses:
         "201":
           description: Category created successfully
@@ -835,7 +860,7 @@ paths:
       tags:
         - categories
       summary: Gets category
-      description: Returns category's name and defaultLocationId
+      description: Returns category's name
       operationId: categories/[categoryId](get)
       parameters:
         - in: path
@@ -845,7 +870,7 @@ paths:
           required: true
       responses:
         "200":
-          description: Name and defaultLocationId
+          description: Name
           content:
             application/json:
               schema:
@@ -853,8 +878,6 @@ paths:
                 properties:
                   name:
                     $ref: "#/components/schemas/name"
-                  defaultLocationId:
-                    $ref: "#/components/schemas/id"
         "400":
           description: Bad Request
         "401":
@@ -867,7 +890,7 @@ paths:
       tags:
         - categories
       summary: Modifies the category
-      description: Updates the category's name and defaultLocationId
+      description: Updates the category's name
       operationId: categories/[categoryId](patch)
       parameters:
         - in: path
@@ -884,11 +907,8 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/name"
-                defaultLocationId:
-                  $ref: "#/components/schemas/id"
               required:
                 - name
-                - defaultLocationId
       responses:
         "204":
           description: Category updated successfully
@@ -922,8 +942,6 @@ paths:
           required: false
           example:
             - name: 'asc'
-            - defaultLocation:
-                name: 'desc'
       responses:
         "200":
           description: All brands of which the user is owner
@@ -941,11 +959,6 @@ paths:
                           $ref: "#/components/schemas/id"
                         name:
                           $ref: "#/components/schemas/name"
-                        defaultLocation:
-                          type: object
-                          properties:
-                            name:
-                              $ref: "#/components/schemas/name"
                   pages:
                     $ref: "#/components/schemas/pages"
         "400":
@@ -967,11 +980,8 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/name"
-                defaultLocationId:
-                  $ref: "#/components/schemas/id"
               required:
                 - name
-                - defaultLocationId
       responses:
         "201":
           description: Brand created successfully
@@ -993,7 +1003,7 @@ paths:
       tags:
         - brands
       summary: Gets brand
-      description: Returns brand's name and defaultLocationId
+      description: Returns brand's name
       operationId: brands/[brandId](get)
       parameters:
         - in: path
@@ -1003,7 +1013,7 @@ paths:
           required: true
       responses:
         "200":
-          description: Name and defaultLocationId
+          description: Name
           content:
             application/json:
               schema:
@@ -1011,8 +1021,6 @@ paths:
                 properties:
                   name:
                     $ref: "#/components/schemas/name"
-                  defaultLocationId:
-                    $ref: "#/components/schemas/id"
         "400":
           description: Bad Request
         "401":
@@ -1025,7 +1033,7 @@ paths:
       tags:
         - brands
       summary: Modifies the brand
-      description: Updates the brand's name and defaultLocationId
+      description: Updates the brand's name
       operationId: brands/[brandId](patch)
       parameters:
         - in: path
@@ -1042,11 +1050,8 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/name"
-                defaultLocationId:
-                  $ref: "#/components/schemas/id"
               required:
                 - name
-                - defaultLocationId
       responses:
         "204":
           description: Brand updated successfully
@@ -1080,8 +1085,6 @@ paths:
           required: false
           example:
             - name: 'asc'
-            - defaultLocation:
-                name: 'desc'
       responses:
         "200":
           description: All supermarkets of which the user is owner
@@ -1099,11 +1102,6 @@ paths:
                           $ref: "#/components/schemas/id"
                         name:
                           $ref: "#/components/schemas/name"
-                        defaultLocation:
-                          type: object
-                          properties:
-                            name:
-                              $ref: "#/components/schemas/name"
                   pages:
                     $ref: "#/components/schemas/pages"
         "400":
@@ -1125,11 +1123,8 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/name"
-                defaultLocationId:
-                  $ref: "#/components/schemas/id"
               required:
                 - name
-                - defaultLocationId
       responses:
         "201":
           description: Supermarket created successfully
@@ -1151,7 +1146,7 @@ paths:
       tags:
         - supermarkets
       summary: Gets supermarket
-      description: Returns supermarket's name and defaultLocationId
+      description: Returns supermarket's name
       operationId: supermarkets/[supermarketId](get)
       parameters:
         - in: path
@@ -1161,7 +1156,7 @@ paths:
           required: true
       responses:
         "200":
-          description: Name and defaultLocationId
+          description: Name
           content:
             application/json:
               schema:
@@ -1169,8 +1164,6 @@ paths:
                 properties:
                   name:
                     $ref: "#/components/schemas/name"
-                  defaultLocationId:
-                    $ref: "#/components/schemas/id"
         "400":
           description: Bad Request
         "401":
@@ -1183,7 +1176,7 @@ paths:
       tags:
         - supermarkets
       summary: Modifies the supermarket
-      description: Updates the supermarket's name and defaultLocationId
+      description: Updates the supermarket's name
       operationId: supermarkets/[supermarketId](patch)
       parameters:
         - in: path
@@ -1200,11 +1193,8 @@ paths:
               properties:
                 name:
                   $ref: "#/components/schemas/name"
-                defaultLocationId:
-                  $ref: "#/components/schemas/id"
               required:
                 - name
-                - defaultLocationId
       responses:
         "204":
           description: Supermarket updated successfully
@@ -1238,8 +1228,6 @@ paths:
           required: false
           example:
             - name: 'asc'
-            - defaultLocation:
-                name: 'desc'
         - in: query
           name: filter
           schema:
@@ -1462,3 +1450,106 @@ paths:
           description: "Forbidden: requesting user does not own requested product"
         "404":
           description: "Not Found: no products found with specified productId"
+  /list:
+    get:
+      tags:
+        - list
+      summary: Gets all shopping list items
+      description: Returns all items owned by the user
+      operationId: list(get)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            $ref: "#/components/schemas/page"
+          required: false
+        - in: query
+          name: order
+          schema:
+            $ref: "#/components/schemas/order"
+          required: false
+          example:
+            - name: 'asc'
+      responses:
+        "200":
+          description: All items of which the user is owner
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          $ref: "#/components/schemas/id"
+                        name:
+                          $ref: "#/components/schemas/name"
+                        checked:
+                          type: boolean
+                  pages:
+                    $ref: "#/components/schemas/pages"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+    post:
+      tags:
+        - list
+      summary: Creates a new shopping list item
+      description: Creates a new item
+      operationId: list(post)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/name"
+              required:
+                - name
+      responses:
+        "201":
+          description: Item created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    $ref: "#/components/schemas/id"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "422":
+          description: "Unprocessable Content: item cannot be created"
+    delete:
+      tags:
+        - list
+      summary: Deletes checked items
+      description: Removes all checked items
+      operationId: list(delete)
+      responses:
+        "204":
+          description: Items deleted successfully
+        "401":
+          description: Unauthorized
+  /list/{itemId}/toggle:
+    post:
+      tags:
+        - list
+      summary: Checks or unchecks an item
+      description: Toggles an item
+      operationId: list/[itemId]/toggle(post)
+      responses:
+        "204":
+          description: Item toggled successfully
+        "401":
+          description: Unauthorized
+        "404":
+          description: "Not Found: no items found with specified itemId"
