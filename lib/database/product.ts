@@ -4,7 +4,7 @@ import { Order, PriceVisibility, ProductFilter, ProductVisibility } from "../val
 import { NotFound, UnprocessableContent } from "../web/response";
 import { findUncheckedNames } from './item';
 import { prisma } from "./prisma";
-import { Product, UnitOfMeasurement } from "./prisma/client";
+import { Prisma, Product, UnitOfMeasurement } from "./prisma/client";
 
 const multiplier: number = 1000;
 
@@ -101,7 +101,41 @@ async function findMinPrice(userId: number, name: string, excludeId: number): Pr
     }))._min.price;
 }
 
-export async function findProducts(userId: number, page: number | undefined, order: Order | undefined, filter: ProductFilter): Promise<{ name: string; }[]> {
+export async function buildWhere(userId: number, filter: ProductFilter): Promise<Prisma.ProductWhereInput> {
+    const uncheckedNames = filter.productVisibility == ProductVisibility.LIST ? await findUncheckedNames(userId) : undefined;
+    let or = undefined;
+    if(uncheckedNames != undefined) {
+        or = [];
+        for(const uncheckedName of uncheckedNames) {
+            or.push(
+                {
+                    category: {
+                        name: {
+                            contains: uncheckedName
+                        }
+                    }
+                },
+                {
+                    name: {
+                        contains: uncheckedName
+                    }
+                }
+            );
+        }
+    }
+    return {
+        userId: userId,
+        OR: or,
+        categoryId: filter.categoryId,
+        name: {
+            contains: filter.name
+        },
+        supermarketId: filter.supermarketId,
+        bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
+    };
+}
+
+export async function findProducts(where: Prisma.ProductWhereInput, page: number | undefined, order: Order | undefined): Promise<{ name: string; }[]> {
     return prisma.product.findMany({
         select: {
             id: true,
@@ -126,34 +160,16 @@ export async function findProducts(userId: number, page: number | undefined, ord
                 }
             }
         },
-        where: {
-            userId: userId,
-            categoryId: filter.categoryId,
-            name: {
-                contains: filter.name,
-                in: filter.productVisibility == ProductVisibility.LIST ? await findUncheckedNames(userId) : undefined
-            },
-            supermarketId: filter.supermarketId,
-            bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
-        },
+        where: where,
         orderBy: order,
         skip: page != undefined ? page * settings.database.pageSize : undefined,
         take: page != undefined ? settings.database.pageSize : undefined
     });
 }
 
-export async function countProductPages(userId: number, filter: ProductFilter): Promise<number> {
+export async function countProductPages(where: Prisma.ProductWhereInput): Promise<number> {
     return Math.ceil(await prisma.product.count({
-        where: {
-            userId: userId,
-            categoryId: filter.categoryId,
-            name: {
-                contains: filter.name,
-                in: filter.productVisibility == ProductVisibility.LIST ? await findUncheckedNames(userId) : undefined
-            },
-            supermarketId: filter.supermarketId,
-            bestPrice: filter.priceVisibility == PriceVisibility.BEST ? true : undefined
-        }
+        where: where,
     }) / settings.database.pageSize);
 }
 

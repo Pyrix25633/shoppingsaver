@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { findBrand } from "../database/brand";
 import { findCategory } from "../database/category";
 import { prisma } from "../database/prisma";
-import { countProductPages, createProduct, deleteProduct, findProduct, findProducts, updateProduct } from "../database/product";
+import { buildWhere, countProductPages, createProduct, deleteProduct, findProduct, findProducts, updateProduct } from "../database/product";
 import { findSupermarket } from "../database/supermarket";
 import { getOrder, getPrice, getProductFilter, getProductName, getQuantity, getUnitOfMeasurement } from "../validation/semantic-validation";
 import { getInt, getObject, getOrUndefined } from "../validation/type-validation";
@@ -15,8 +15,9 @@ export async function getProducts(req: Request, res: Response): Promise<void> {
         const page = getOrUndefined(req.query.page, getInt);
         const order = getOrUndefined(req.query.order, getOrder);
         const filter = getProductFilter(req.query.filter);
-        const products = await findProducts(user.id, page, order, filter);
-        const pages = await countProductPages(user.id, filter);
+        const where = await buildWhere(user.id, filter);
+        const products = await findProducts(where, page, order);
+        const pages = await countProductPages(where);
         new Ok({ products: products, pages: pages }).send(res);
     } catch(e: any) {
         handleException(e, res);
