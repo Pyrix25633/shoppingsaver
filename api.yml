@@ -1553,3 +1553,27 @@ paths:
           description: Unauthorized
         "404":
           description: "Not Found: no items found with specified itemId"
+  /list/{itemId}:
+    delete:
+      tags:
+        - list
+      summary: Deletes item
+      description: Removes the item
+      operationId: list/[itemId](delete)
+      parameters:
+        - in: path
+          name: itemId
+          schema:
+            $ref: "#/components/schemas/id"
+          required: true
+      responses:
+        "204":
+          description: Item deleted successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: "Forbidden: requesting user does not own requested item"
+        "404":
+          description: "Not Found: no items found with specified itemId"

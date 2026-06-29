@@ -96,3 +96,12 @@ export async function deleteCheckedItems(userId: number): Promise<{ count: numbe
         }
     });
 }
+
+export async function deleteItem(userId: number, id: number): Promise<Item> {
+    return await prisma.item.delete({
+        where: {
+            userId: userId,
+            id: id
+        }
+    });
+}

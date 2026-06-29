@@ -1,12 +1,13 @@
 import { RedirectButton } from "./form.js";
-import { IconToggleTableData, LinkTableHeader, StringTableData, Table, TableHeader, TableRow } from "./table.js";
+import { IconLinkTableData, IconToggleTableData, LinkTableHeader, StringTableData, Table, TableHeader, TableRow } from "./table.js";
 import { Loader } from "./utils.js";
 Loader.loadCachedCustomization();
 class ListTable extends Table {
     constructor() {
         super('/api/list', 'list', null, [
             new LinkTableHeader('Checked'),
-            new TableHeader('Name', 'name')
+            new TableHeader('Name', 'name'),
+            new LinkTableHeader('Delete')
         ]);
     }
     parseElement(element) {
@@ -17,7 +18,8 @@ class ListTableRow extends TableRow {
     parseData(element) {
         return [
             new IconToggleTableData(element.id, element.checked, 'api/list/{id}/toggle', listTable, '/img/unchecked.svg', '/img/checked.svg'),
-            new StringTableData(element.name)
+            new StringTableData(element.name),
+            new IconLinkTableData(element.id, '/list/{id}/delete', '/img/delete.svg')
         ];
     }
 }

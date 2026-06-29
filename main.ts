@@ -11,7 +11,7 @@ import { getTfaGenerateKey, getTfaValidateCode, getValidateToken, postLogin, pos
 import { getBrand, getBrands, patchBrand, postBrand } from './lib/api/brands';
 import { getCategories, getCategory, patchCategory, postCategory } from './lib/api/categories';
 import { getBrandNameFeedback, getCategoryNameFeedback, getConfirmUsernameFeedback, getItemNameFeedback, getLoginUsernameFeedback, getProductNameFeedback, getRegisterEmailFeedback, getRegisterUsernameFeedback, getSupermarketNameFeedback } from './lib/api/feedbacks';
-import { deleteList, getList, postItem, postToggleItem } from './lib/api/list';
+import { deleteList, delItem, getList, postItem, postToggleItem } from './lib/api/list';
 import { delProduct, getProduct, getProducts, patchProduct, postProduct } from './lib/api/products';
 import { getSettings, getSettingsCustomization, getSettingsId, patchSettings } from './lib/api/settings';
 import { getSupermarket, getSupermarkets, patchSupermarket, postSupermarket } from './lib/api/supermarkets';
@@ -155,6 +155,8 @@ main.post('/api/list/:itemId/toggle', postToggleItem);
 
 main.delete('/api/list', deleteList);
 
+main.delete('/api/list/:itemId', delItem);
+
 // --server-- //
 
 if(settings.https.port != null) {
@@ -267,4 +269,7 @@ main.get('/list/add', (req: Request, res: Response): void => {
 });
 main.get('/list/delete', (req: Request, res: Response): void => {
     res.sendFile(path.resolve('./pages/list-delete.html'));
+});
+main.get('/list/:itemId/delete', (req: Request, res: Response): void => {
+    res.sendFile(path.resolve('./pages/item-delete.html'));
 });
