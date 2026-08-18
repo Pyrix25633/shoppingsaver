@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { isBrandNameInUse } from "../database/brand";
 import { isCategoryNameInUse } from "../database/category";
 import { isItemNameInUse } from "../database/item";
-import { findProductFromName, findProductFromNameBrandSupermarket, isProductNameInUse } from "../database/product";
+import { findProductFromNameBrandSupermarket, isProductNameInUse } from "../database/product";
 import { isSupermarketNameInUse } from "../database/supermarket";
 import { isTempUserEmailInUse, isTempUserUsernameInUse } from "../database/temp-user";
 import { isUserEmailInUse, isUserUsernameInUse } from "../database/user";
@@ -180,8 +180,13 @@ export async function getItemNameFeedback(req: Request, res: Response): Promise<
             const name = getName(req.query.name);
             const inUse = await isItemNameInUse(user.id, name);
             if(!inUse) {
-                const product = await findProductFromName(user.id, name);
-                feedback = product == null ? 'Valid Name' : 'Products with the same Name';
+                const isProduct = await isProductNameInUse(user.id, name);
+                if(!isProduct) {
+                    const isCategory = await isCategoryNameInUse(user.id, name);
+                    feedback = isCategory ? "Category with the same Name" : "Valid Name";
+                }
+                else
+                    feedback = "Products with the same Name";
             }
             else
                 feedback = 'Name already used!';
