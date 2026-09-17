@@ -1,4 +1,3 @@
-import bodyParser from 'body-parser';
 import cookieParser from "cookie-parser";
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
@@ -24,8 +23,8 @@ const upgradeMain: Express = express();
 main.set('trust proxy', true);
 main.set('query parser', 'extended');
 main.use(cookieParser());
-main.use(bodyParser.urlencoded({ extended: true }));
-main.use(bodyParser.json({ limit: '6mb' }));
+main.use(express.urlencoded({ extended: true }));
+main.use(express.json());
 main.use(cors());
 main.use(helmet());
 main.use(helmet.contentSecurityPolicy({
