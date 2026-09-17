@@ -554,7 +554,6 @@ export class QuantityInput extends Input {
             this.precompile(quantity);
             return quantity;
         }
-        console.log(Number.isSafeInteger(quantity), quantity);
         if (isNaN(quantity) || !Number.isSafeInteger(quantity) || quantity <= 0) {
             this.setError(true, this.feedbackText.replace('Input ', '') + ' is not a Quantity!');
             return undefined;
@@ -907,7 +906,7 @@ export class ApiDropdownInput extends DropdownInput {
                 },
                 error: (req, err) => {
                     console.error(err);
-                    resolve();
+                    resolve(undefined);
                 }
             });
         });

@@ -82,7 +82,6 @@ export class UnprocessableContent extends HttpResponse {
 
 export class InternalServerError extends HttpResponse {
     public send(res: Response): void {
-        console.log(res);
         res.sendStatus(500);
     }
 }

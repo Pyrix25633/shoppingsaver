@@ -20,7 +20,6 @@ export async function getSettings(req: Request, res: Response): Promise<void> {
             tfa: user.tfaKey != null
         }).send(res);
     } catch(e: any) {
-        console.error(e);
         handleException(e, res);
     }
 }
